@@ -20,6 +20,7 @@ library(MonteCarlo)
 library(parallel)
 library(gstat)
 library(mapproj)
+library(RColorBrewer)
 
 #--- source functions ---#
 source(here("Codes", "functions new.R"))
@@ -41,9 +42,21 @@ exp_design <- assign_rates(
   .[, .(td_grid_id, rate)]
 
 trial_design <- merge(trial_grids, exp_design, by = "td_grid_id")
-
 xlim <- c(352640 - 60, 352640 + 60)
 ylim <- c(4337720 - 100, 4337720 + 100)
+
+ggplot(trial_design) +
+  geom_sf(data = trial_design, aes(fill = as.factor(rate)), lwd = 0) +
+  coord_sf(xlim = xlim, 
+           ylim = ylim,
+           datum = st_crs(trial_grids)) +
+  theme(
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank())
 
 ##### Angle and Misalignment #####
 alignment_case <- c("angle", "mis-alignment")
@@ -81,79 +94,50 @@ map_data_for_plot <- map_data %>%
   rbindlist() %>% 
   st_as_sf()
 
-alignment_map <- ggplot(map_data_for_plot) +
+map_data_for_plot$error_degree <- as.factor(map_data_for_plot$error_degree)
+levels(map_data_for_plot$error_degree) <- c("0-degree", "10-degree", "30-degree")
+
+trial_design$rate <- as.factor(trial_design$rate)
+
+alignment_map_angle <- ggplot(subset(map_data_for_plot, alignment_case == "angle")) +
   geom_sf(data = trial_design, aes(fill = rate), lwd = 0) +
   geom_sf(fill = NA, size = 0.2, color = "black") +
   coord_sf(xlim = xlim, 
            ylim = ylim,
            datum = st_crs(trial_grids)) +
-  facet_grid(alignment_case ~ error_degree) +
-  scale_colour_distiller(palette = "Blues", 
-                         type = "seq",
-                         direction = 1,
-                         guide = "colourbar",
-                         aesthetics = c("fill")) +
+  facet_grid( ~ error_degree) +
   theme(
     axis.text.x = element_blank(),
     axis.text.y = element_blank(),
     axis.ticks = element_blank(),
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
-    panel.background = element_blank())
+    panel.background = element_blank()) +
+  guides(fill = guide_legend(title = "Target Rate")) +
+  scale_fill_brewer(palette="Blues")
+  
+saveRDS(alignment_map_angle, file = here("Results", "alignment_map_angle.rds"))
 
-saveRDS(alignment_map, file = here("Results", "alignment_map.rds"))
+levels(map_data_for_plot$error_degree) <- c("0-foot shift", "10-foot shift", "30-foot shift")
 
-### individual examples for harvest misalignment types
-
-alignment_case <- c("angle")
-error_degree <- c(10)
-
-### alignment maps ###
-harvest <- get_harvest(harvester_polygons, "angle", 10)
-
-
-angle_map <- ggplot(harvest) +
+alignment_map_shift <- ggplot(subset(map_data_for_plot, alignment_case == "mis-alignment")) +
   geom_sf(data = trial_design, aes(fill = rate), lwd = 0) +
   geom_sf(fill = NA, size = 0.2, color = "black") +
   coord_sf(xlim = xlim, 
            ylim = ylim,
            datum = st_crs(trial_grids)) +
-  scale_colour_distiller(palette = "Blues", 
-                         type = "seq",
-                         direction = 1,
-                         guide = "colourbar",
-                         aesthetics = c("fill")) +
+  facet_grid( ~ error_degree) +
   theme(
     axis.text.x = element_blank(),
     axis.text.y = element_blank(),
     axis.ticks = element_blank(),
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
-    panel.background = element_blank())
-saveRDS(angle_map, file = here("Results", "angle_map.rds"))
+    panel.background = element_blank()) +
+  guides(fill = guide_legend(title = "Target Rate")) +
+  scale_fill_brewer(palette="Blues")
+saveRDS(alignment_map_shift, file = here("Results", "alignment_map_shift.rds"))
 
-### alignment maps ###
-harvest <- get_harvest(harvester_polygons, "mis-alignment", 15)
-
-shift_map <- ggplot(harvest) +
-  geom_sf(data = trial_design, aes(fill = rate), lwd = 0) +
-  geom_sf(fill = NA, size = 0.2, color = "black") +
-  coord_sf(xlim = xlim, 
-           ylim = ylim,
-           datum = st_crs(trial_grids)) +
-  scale_colour_distiller(palette = "Blues", 
-                         type = "seq",
-                         direction = 1,
-                         guide = "colourbar",
-                         aesthetics = c("fill")) +
-  theme(
-    axis.text.x = element_blank(),
-    axis.text.y = element_blank(),
-    axis.ticks = element_blank(),
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.background = element_blank())
-saveRDS(shift_map, file = here("Results", "shift_map.rds"))
 
 ##### Mismatch #####
 
@@ -223,47 +207,27 @@ map_data_for_plot <- map_data %>%
   rbindlist() %>% 
   st_as_sf()
 
-alignment_mismatch <- ggplot(map_data_for_plot) +
+map_data_for_plot$error_degree <- as.factor(map_data_for_plot$error_degree)
+levels(map_data_for_plot$error_degree) <- c("0.75 Ratio", "1 Ratio", "1.25 Ratio")
+
+trial_design$rate <- as.factor(trial_design$rate)
+
+alignment_map_mismatch <- ggplot(map_data_for_plot) +
   geom_sf(data = trial_design, aes(fill = rate), lwd = 0) +
   geom_sf(fill = NA, size = 0.2, color = "black") +
   coord_sf(xlim = xlim, 
            ylim = ylim,
            datum = st_crs(trial_grids)) +
-  facet_grid(alignment_case ~ error_degree) +
-  scale_colour_distiller(palette = "Blues", 
-                         type = "seq",
-                         direction = 1,
-                         guide = "colourbar",
-                         aesthetics = c("fill")) +
+  facet_grid( ~ error_degree) +
   theme(
     axis.text.x = element_blank(),
     axis.text.y = element_blank(),
     axis.ticks = element_blank(),
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
-    panel.background = element_blank())
-saveRDS(alignment_mismatch, file = here("Results", "alignment_map_mismatch.rds"))
+    panel.background = element_blank()) +
+  guides(fill = guide_legend(title = "Target Rate")) +
+  scale_fill_brewer(palette="Blues")
 
-### alignment maps ###
-harvest <- get_harvest(harvester_polygons, "mismatch", .75)
-
-mismatch_map <- ggplot(harvest) +
-  geom_sf(data = trial_design, aes(fill = rate), lwd = 0) +
-  geom_sf(fill = NA, size = 0.2, color = "black") +
-  coord_sf(xlim = xlim, 
-           ylim = ylim,
-           datum = st_crs(trial_grids)) +
-  scale_colour_distiller(palette = "Blues", 
-                         type = "seq",
-                         direction = 1,
-                         guide = "colourbar",
-                         aesthetics = c("fill")) +
-  theme(
-    axis.text.x = element_blank(),
-    axis.text.y = element_blank(),
-    axis.ticks = element_blank(),
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.background = element_blank())
-saveRDS(mismatch_map, file = here("Results", "mismatch_map.rds"))
+saveRDS(alignment_map_mismatch, file = here("Results", "alignment_map_mismatch.rds"))
 

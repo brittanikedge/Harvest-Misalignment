@@ -1,5 +1,5 @@
 ---
-title: "Impact of Data Processing on Economic Results \n in On-Farm Experiment Data"
+title: "Impact of Harvest Misalignment on Economic Results \n in On-Farm Experiment Data"
 output:
   bookdown::word_document2:
     reference_docx: "word_template.docx"
@@ -23,11 +23,10 @@ knitr::opts_chunk$set(
   message = FALSE,
   error = TRUE
 )
-
 options(knitr.duplicate.label = "allow")
 ```
 
-```{r packages, cache = FALSE}
+```{r packages, echo=TRUE, cache=FALSE}
 library(here)
 library(sf)
 library(ggplot2)
@@ -40,6 +39,7 @@ library(parallel)
 library(tidyverse)
 library(data.table)
 library(dplyr)
+here()
 ```
 
 ```{r loadresults, results = "hide"}
@@ -48,9 +48,6 @@ pdf.options(useDingbats = TRUE)
 ```
 
 ```{r loadfigures, results = "hide"}
-# simulation figures
-spatial_error_map <- readRDS(here("Results/spatialerrormap.rds"))
-
 # cleaning figures
 all_points_bad <- readRDS(here("Results/all_points_map_bad.rds"))
 all_points_good <-readRDS(here("Results/all_points_map_good.rds"))
@@ -70,11 +67,11 @@ profit_no_cleaning <- readRDS(here("Results/profit_no_cleaning.rds"))
 rate_no_cleaning <- readRDS(here("Results/rate_no_cleaning.rds"))
 
 profit_clean_shift <- readRDS(here("Results/profit_clean_shift.rds"))
-profit_clean_angle <- readRDS(rate_clean_angle, here("Results/profit_clean_angle.rds"))
+profit_clean_angle <- readRDS(here("Results/profit_clean_angle.rds"))
 profit_clean_mismatch <- readRDS(here("Results/profit_clean_mismatch.rds"))
 
 rate_clean_shift <- readRDS(here("Results/rate_clean_shift.rds"))
-rate_clean_angle <- readRDS(rate_clean_angle, here("Results/rate_clean_angle.rds"))
+rate_clean_angle <- readRDS(here("Results/rate_clean_angle.rds"))
 rate_clean_mismatch <- readRDS(here("Results/rate_clean_mismatch.rds"))
 
 profit_density_mismatch <- readRDS(here("Results/profit_density_mismatch.rds"))
@@ -114,13 +111,16 @@ factor_maxdev <- readRDS(here("Results/factor_maxdev.rds"))
 On-farm experimentation has a long history in the agronomic study, beginning with the small plot trials that we still see today at land-grant universities. In recent years, experiments have adapted due to new equipment and in response to producers’ curiosity about their farms’ potential for variable-rate (VR) management. Precision agriculture technologies (PAT), specifically variable-rate technology (VRT), enable trials that were not possible before when considering trial design and size; these trials are on-farm precision experiments (OFPE). Guidance systems, automatic-section control, yield monitors, and variable-rate applicators allow researchers to design various kinds of whole-field trials and the producer to implement them while following their standard management procedures. Figure \@ref(fig:trial) shows an example of an OFPE designed by the Data-Intensive Farm Management project (Bullock, et al. 2019). This trial covers the whole field with experimental plots designed to fit the width of the farm’s machinery. With the desired trial rates, field boundary, and guidance lines, an OFPE can be designed and sent to a farmer within a few hours or less. The potential expansion of OFPE makes their design and analysis essential topics for current and future research in precision agriculture.
 
 ![(#fig:trial) Examples of OFPE](/Users/brittaniedge/Library/CloudStorage/Box-Box/Machine_Misalignment/Results/trialexample.png)
+
 While OFPE trials are relatively new in precision agriculture research, due to the advantages of these types of trials and VRT availability, universities and producer organizations are increasingly developing on-farm trial networks and publishing guidance for implementing trials [@licht_witt_2019; @colley_dawson_zystro_healy_myers_behar_becker_2018; @corn.agronomy.wisc.edu_2006; @laurent_kyveryga_makowski_miguez_2019]. Laurent et al. present some examples of these networks (2019). The inclusion of farmer-operated trials benefits both farmers and researchers. Farmers receive more personalized information about optimal treatments for their fields, and researchers can begin putting trials together across a region to analyze larger patterns in optimal management practices, as described by Laurent et al. [-@laurent_kyveryga_makowski_miguez_2019]. Additionally, these whole-farm trials have significant advantages over traditional small-plot trials regarding the number of replicates and field conditions covered. A whole-farm trial can attain spatially balanced treatments without soil tests and have many replicates, while prior information is needed to determine sites for small plot trials within a field.
  
- * combine these paragraphs *
+combine these paragraphs
+
 While OFPEs are becoming more common, the literature has not fully explored the topic. There is some connections with past research on PAT that has looked extensively into creating management zones and cleaning specific data types [@bernardi2018mapping; @chen2019delineation; @ferguson1996soil; @guastaferro2010comparison; @king2005mapping; @kweon2012delineation; @velandia2006economics]. However, much of the literature is not in the context of trial data, which has unique challenges when working directly with farmers. The current work on OFE focuses on trial design, such as the number of replications, strip vs. checkerboard design, systemic vs. randomized treatments, or analysis of the trials [@evans_recalde_salas_rakshit_scanlan_cook_2020; @alesso_cipriotti_bollero_martin_2019; @tanaka_2021].  Most papers do not discuss what happens between data collection and trial analysis. Some research focuses on cleaning specific data sets, such as yield data [@vega_córdoba_castro-franco_balzarini_2019; @luck_mueller_fulton_2015] but not the complete processing to create units of observation with the trial data. This paper examines the impact of machinery alignment on the estimated optimal treatment level through a simulation study and real-field trial data. 
 
 The importance of data quality in agricultural trials is highlighted in the past literature, which indicates that VRT is of limited value without information regarding the marginal yield response [@bullock1998does]. @lowenberg2019setting argue that the perception that PAT adoption is lagging comes from the slow option of VRT, not technology such as guidance systems that have been widely adopted. The information gap leaves producers with a lot of data and technology but no reliable guidance on how to use their data or VRT for production decisions. More recently, Bullock et al. [-@bullock_mieno_hwang_2020] emphasize that the value of PAT may be through the information gained from trials rather than through VR management. This is particularly true for homogeneous fields; VR management is unlikely to be the optimal strategy, but an OFPE may give the producer information that updates their uniform management rate (UR). Thus, this paper focuses on the change in the optimal UR in response to a change in data processing.
-* combine inside these messages *
+
+combine inside these messages
 
 During the data processing of OFPE, the various point layers of inputs and harvest need to be combined into a single layer where units of observation are established for analysis. When creating units with a single value of yield, seeding rate, and nitrogen rate, many decisions are made by researchers. Those decisions may have little effect when a trial is well-implemented, and the trial grid lines up well with the treatments. However, those decisions have different implications when there is a misalignment in the different data layers. Standard trial design procedures attempt to avoid these errors; research and university guides for trial design mention the importance of equipment size when determining the trial plot’s width (Licht and Witt 2019). Specifically, the trial should be designed and implemented so that the yield monitor is collecting from only one input rate in a pass. Figure 2 illustrates the expected alignment and an example of misalignment for a trial with a harvester that is half the width of the planter. The left-panel has the planter going down the middle of trial plot and the harvester starting a quarter of the way into the plot to have two complete passes inside the trial plot. The right panel has one harvest pass close to the middle of the plot with the planter, resulting in the other pass harvesting crop outside of the trial plot. 
 
@@ -130,7 +130,7 @@ Misalignments come from producer practices, such as planting and harvesting with
 
 This paper evaluates the potential profit losses and bias in the estimated optimal uniform input rate from data misalignment under a range of trial conditions and proposes a data processing method that removes harvest with misalignment. We simulate OFE data with different trial rates, yield response functions, types of harvest misalignment, and degree of misalignment and use the proposed processing method on the data. We present a deterministic analysis to build insights into the nature of the problems and their impacts  and a simulation study with random errors. After simulating the trial data, we use the data to estimate the optimal uniform input rate and compare the profits to the true optimal uniform input rate from the yield response function. Finally, we  also use the proposed data processing on three OFPE field trials and compare the results to the data processing without considering misalignment.
 
-* shorten and make more general, add nitrogen results *
+shorten and make more general, add nitrogen results
 
 We find that the impact of harvest misalignment depends on the type of misalignment, the degree of misalignment, the shape of the yield response curve, and the trial rates. A parallel shift in the driving direction creates considerable profit losses, while different driving directions or machinery sizes have smaller profit losses. Generally, harvest misalignment is a larger concern when the growing conditions result in a yield response with high curvature. The trial rates impact the estimated yield response function because they move the dataset along the function. For example, if the rates are in a very steep part of the response function, the estimated response function may not capture the curvature and overestimate the response to the input. The influence of the trial rates is not consistent across different response functions; thus, avoiding misalignment is the most reliable way to avoid potential profit losses. The data processing method decreases the profit losses when harvester misalignment is present, but if there are not enough yield observations without harvester misalignment, the profit losses could increase. Thus, while data processing can reduce profit losses for certain cases, harvester misalignment is essential to consider when designing a trial and communicating with participating producers. Trial plots should be larger than the harvester whenever possible, which will increase the amount of unaveraged yield data produced from all of the harvest misalignment types and allow the data processing to better predict the optimal input rate. 
 
@@ -149,7 +149,8 @@ From Jensen’s Inequality, we see that yield harvested from locations in which 
 
 The first misalignment  type is due to a parallel shift in the machinery path. Panel (a) of Figure \@ref(fig:shiftmap) shows an example of this misalignment where the black yield polygons are shifted 10 feet over from the nitrogen treatments; thus, the harvester collects from two nitrogen rates. With the parallel-shift misalignment, the potential yield gap depends on the size of the shift. In Figure 4, there are 30-foot plots and a 10-foot shift, so the harvester always one-third of the width in a different plot. We saw in the Jensen’s Inequality figure that more equal weighting results in a larger Jensen Gap; thus, a parallel-shift that is half the plot size will result in the largest Jensen Gap. This is a recognized source of error in OFPE trials. Researchers use farmer supplied guidance lines when designing the trials, aligning the trial plots according to previous harvests to decrease misalignment. However, miscommunications between the farmers and researchers can lead to a producer using different guidance linesduring operations. However, there are technological limits to reducing these errors. 
 
-* move autosteer discussion to footnote *
+move autosteer discussion to footnote
+
 Auto-steer is a technology that allows for hands-free operation along most of a pass across the field; a trial implemented with auto-steer will have fewer alignment errors because the machinery will keep itself in-line with the guidance lines. Guidance systems provide visual guidance to assist operators with alignment, but the operator is still manually controlling the machinery. Thus, guidance systems without auto-steer allow human error and fatigue to result in shifts in the operations. A miscounted row or other error will then continue in parallel passes across the field for the duration of the activity. Guidance systems will also vary in the accuracy of the GPS, causing small misalignments throughout operating. Although researchers should continue to work with farmers to reduce misalignment, there is a limit to the error reduction possible. , and research should look at the implications of trial misalignment. We need to know how misalignments affect the analysis of the field trial and develop methods to mitigate possible effects.
 
 ```{r alignment-maps, echo=FALSE, fig.cap="Examples of Harvest Misalignment due to a Parallel Shift, Different Headings, and Incompatible Machinery Widths", fig.height=4}
@@ -165,14 +166,14 @@ Figure \@ref(fig:alignment-maps) shows the different scenarios with incompatible
 
 ## Consequence of misalignment without proper data processing 
 
-* simplify the parts about transitions and headlands put any extra in the appendix *
+simplify the parts about transitions and headlands put any extra in the appendix
 Each OFPE research group has its own protocols, but there are common concerns when cleaning trial data. These include removing headlands, transition zones, and unreliable yield observations. Headlands are the areas of the field where machinery turns after completing a pass across the field. In figure \@ref(fig:trial), the headlands are seen with the same input rate; these parts of the field are not in the final analysis. Turning around to begin a new path impacts harvest values through speed and potential swath width; additionally, differences in sunlight and wind exposure may change the growing conditions in the headlands.
 
 The transition zones are the areas where the machine enters a new treatment plot. In these areas, the applicator is transitioning to a new target input rate, and the harvester is transitioning to reporting a new yield level. Because the machine may have a lag before applying the correct rates or reporting the accurate yield value the data in the transition zones are less reliable than further into a trial plot. Figure \@ref(fig:transitions) shows what these transition zones look like in as-planted data for a soybean trial. The overall application is accurate, with visible treatment plots, but there are areas where the planter has not adjusted to the new rate, particularly when moving between the highest and lowest planting rates.
 
 ![(#fig:transitions) Examples of harvest and asapplied points](/Users/brittaniedge/Library/CloudStorage/Box-Box/Machine_Misalignment/Results/transitionzone.png)
 
-* make it to the main point here quickly, two things we can make the trial plots the units or we can use area weighting with yield plygons *
+make it to the main point here quickly, two things we can make the trial plots the units or we can use area weighting with yield plygons
 
 The first intuitive approach for processing OFPE data centers around the original trial plots, using subplots of the trial plots as the unit of observation. Here we are assuming that points lying within the same treatment plot can be aggregated. Figure \@ref(fig:naivecleaning) illustrates this data processing approach. In the first panel, the outliers, inliers, and the transition- zones points are shown in red-bordered rectangles. Those points are no longer in the second panel, and the subplots in the last panel represent the final units of observation, where we calculate the median value of the yield and as-applied points inside each subplot. 
 
@@ -183,7 +184,7 @@ This approach assumes any harvest value in a trial plot received the as-applied 
 Gathering data points into spatial polygons is one tool for gathering harvest and planting points into common spatial units. Polygons can depict the area of the field where those values were applied and harvested when compared to point data that do not indicate the full area the point represents. Figure \@ref(fig:pointtopoly) shows what the point and polygon data look like for a set of harvest points with the blue box representing the harvester at the beginning of the passes. The polygons are constructed using the swath width of the machine or section reported in the data, the driving direction, and the distance between the points. If the driving direction or distance is not reported in the data, these can be calculated using the points. The swath width can be recovered based on knowledge of the machinery; however, missing information about the adjusted swath width when going over a previously visited part of the field will make the polygon recovery more challenging.
 
 ![(#fig:pointtopoly) Harvest points and polygons](/Users/brittaniedge/Library/CloudStorage/Box-Box/Machine_Misalignment/Results/point-to-poly.png)
- * think about removing point to poly and going straight to here *
+think about removing point to poly and going straight to here
 Intersecting the new yield polygons and as-planted polygons, the values may reveal that some yield observations came from areas that received two different input rates. For example, figure \@ref(fig:alignmentmaps) shows the intersection of yield and planting polygons for the two DIFM fields; the yield polygons are in black, and the shade of the green polygons shows the planting rate, with darker green being a higher rate. The field in the left panel has most yield polygons coming from one seeding rate, but the field in the right panel has yield polygons harvesting from two or more planting rates.
 
 ![(#fig:alignmentmaps) Alignment of harvest with inputs application](/Users/brittaniedge/Library/CloudStorage/Box-Box/Machine_Misalignment/Results/alignmentwithpoly.png)
@@ -193,9 +194,9 @@ When there is more than one planting rate associated with a yield point, gatheri
 The problem with this approach comes from the shape of the yield response curve. The functional forms for yield response to nitrogen or seeding rate are concave *citation*, and this concavity has implications for averaging strategy proposed in the last section. The implications of averaging are described by Jensen's Inequality, presented in equation 1. The inequality states that for a concave function $f(N)$ and weights such that $\lambda_{1} + \lambda_{2} = 1$, the value of the function at the weighted mean of $N_{1}$ and $N_{2}$ will be greater than or equal to the weighted mean of values of the function at $N_{1}$ and $N_{2}$. This inequality can be proven for any $\lambda_{1}, \lambda_{2}, ... \lambda_{n}$ such that the weights add up to one. 
 
 $$f(\lambda_{1}*N_{1} + \lambda_{2}*N_{2}) \ge \lambda_{1}*f(N_{1}) + \lambda_{2}*f(N_{2})  (1)$$
-* define the jensens gap *
+define the jensens gap
 How large the Jensen’s Gap is  depends on the concavity of the response function, the difference between the two input rates, and the weighting of the points [@gao_sitharam_roitberg_2019]. 
-* just do one jensens example here *
+just do one jensens example here
 Figure \@ref(fig:jensens) presents three examples of Jensen Gaps. Examples 1 and 2 show the impact of the weighting; both harvest points come from a combination of 30 and 100 thousand seed per acre treatments but with different weights. Example 1 has 50/50 weighting while example 2 has 30/70 weighting. The Jensen Gap is 10.8 and 7.8 with 50/50 and 30/70, respectively. In practice, this means if most of the yield area received one treatment, the impact of averaging the values will be smaller than when the two treatments cover similar areas in the yield polygon. This holds true for any shape of the yield response function. 
 
 Example 3 averages yield from 120 and 190 thousand seed per acre with equal weighting. Comparing examples 1 and 3, the two treatments both differ by 70 thousand seed per acre, but the observed treatments lie in different parts of the yield response curve. The Jensen Gap changes with the curvature of the function, decreasing from 10.8 to 0.5 as the curvature decreases. Averaging the yield observations in the plateau in example 3 does not have the same impact as averaging yield observations in the high curvature part of the response in example 1. However, unlike the impact of weighting, where the impact can be predicted without knowing the yield response function, the impact of the treatment rates depends on the curvature of the yield response function.
@@ -251,7 +252,7 @@ $$Perc_{i} = \sum\limits_{j=1}^{n}\frac{Area(Yield_i \cap Applied_j)}{Area(Yield
 Step 3 removes the harvest polygons with misalignment. In equation 3 the area-weighted mean input rate $WMRate_i$ is calculated for the yield polygon $i$, where $Perc_{ij}$ is the percentage of the treated area of the yield polygon $i$ covered by treatment polygon $j$, $Perc_i$ is the percentage of yield polygon $i$ covered by treatment polygons, and $Rate_{ij}$ is the input rate in the polygon $j$. Then the weighted deviation for the yield polygon $i$ is measured in equation 4 by measuring the area-weighted mean difference between the input rates found in the yield polygon and the $WMRate_{i}$. 
 $$WMRate_{i} = \sum\limits_{j=1}^{n}\frac{Perc_{ij}*Rate_{j}} {Perc_i} (3)$$
 $$Deviation_{i} = \sum\limits_{j=1}^{n}\frac{Perc_{ij}*|Rate_{ij}-WMRate_i|} {Perc_i} (4)$$
-When the weighted-deviation $Deviation_i$ is above the maximum level for the input, the yield observation will not be included in analysis. Note that weighting by area does not remove yield observations with a small misalignment, even if there is a large difference between treatment rates. *clarify this sentence* By using the deviation of input rates, we do not remove yield observations covering two treatment plots that receive the same or similar input rates. 
+When the weighted-deviation $Deviation_i$ is above the maximum level for the input, the yield observation will not be included in analysis. Note that weighting by area does not remove yield observations with a small misalignment, even if there is a large difference between treatment rates. (clarify this sentence) By using the deviation of input rates, we do not remove yield observations covering two treatment plots that receive the same or similar input rates. 
 
 Step 4 defines the yield polygon groups. Yield polygons are considered in the same group $k$ if they are within 6 meters apart and have input levels that do not differ by more than $MaxDev$ as shown in equation 5. Finally, step 5 splits the groups in step 4 into what will become the final units of observation. Once these yield polygons are dissolved into a new polygon, the length will be between the desired limits defined by the user. The area-weighted average of the as-applied and yield values in each polygon is calculated, and this becomes the analysis data set.
 
@@ -278,7 +279,7 @@ factor_maxdev
 
 The trial designs are for a 60-feet applicator and harvester, so each experimental plot is 60-feet wide. The input rates follow a latin-square design, where each input level appears in every row and column of a block; this makes the input levels spatially balanced across the field. We assume that the applicator heading aligns with the trial design; thus, the harvester will be the only source of misalignment in this analysis. In practice, there can be multiple sources of misalignment in OFPE data.
 
-*insert a trial example*
+insert a trial example
 
 ## Trial Designs and as-applied N rates
 The trial designs are for a 60-feet applicator and harvester, so each experimental plot is 60-feet wide. The input rates follow a latin-square design, where each input level appears in every row and column of a block; this makes the input levels spatially balanced across the field. We assume that the applicator heading aligns with the trial design; thus, the harvester will be the only source of misalignment in this analysis. In practice, there can be multiple sources of misalignment in OFPE data.
@@ -290,7 +291,7 @@ $$InputRate_{j}= TargetRate_{j} + e \ (13)$$
 
 ## Yield
 
-We evaluate the optimal inputs rates calculated for three yield response functions to nitrogen rate generated by the Mistcherlich-Baule*cite here* function, with varying levels of curvature. The MB function with one input is presented in equation 6 with three parameters, $yield_{max}$, $\beta_1$, and $\beta_2$. 
+We evaluate the optimal inputs rates calculated for three yield response functions to nitrogen rate generated by the Mistcherlich-Baule(cite here) function, with varying levels of curvature. The MB function with one input is presented in equation 6 with three parameters, $yield_{max}$, $\beta_1$, and $\beta_2$. 
 
 $$f(input) = yield_{max}*[1-e^{-beta_{1}(beta_{2}+input)}]  (5)$$
 $$f_{low}(n) = 200*[1-e^{-0.006(140+n)}]  (5)$$
@@ -338,7 +339,7 @@ There are 48 combinations of harvest misalignment, error level, and yield respon
 Equation 11 gives the yield for each experimental plot unit, but the observed yield comes from the harvest polygons. For each misalignment scenario, the simulation shifts the harvest grid by error level, rotates it by the error degree, or creates a new harvest grid with the new harvest width. Inside the harvest polygons, the observed data report the area-weighted mean of the yield and as-applied values found in the trial cell. 
 
 The weights are calculated in equation 9, calculating the percentage of the harvest polygon i that intersects the trial polygon j. Equations 14 and 15 show how the percentages, $Perc_{ij}$, are used to calculate the observed harvest and input rates, $Yield_{i}$ and $InputRate_{i}$. Equation 14 reports the yield as the yield monitor does, averaging the yield collected across the whole harvester path.
-*incorporate these equations in the text*
+incorporate these equations in the text
 
 $$Perc_{ij} = \frac{Area(Yield_i \cap Applied_j)}{Area(Yield_i)} (9)$$
 $$Yield_{i} = \sum\limits_{j=1}^{n}\frac{Perc_{ij}*Yield_{j}} {Perc_i} (10)$$

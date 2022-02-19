@@ -60,7 +60,7 @@ weighting1 <- base + geom_function(fun = soy_function) +
   geom_line(linetype = "dashed", aes (group = pair)) +
   geom_line(data = subset(gap_data, pair == 1), linetype = "dotted", aes (group = pair)) +
   geom_label(data = subset(length_data, pair == 1),
-             aes(label = round(length, 4)),
+             aes(label = round(length, 2)),
              size = 8) +
   xlim(0, 200) +
   ylim(175, 260) +
@@ -74,7 +74,7 @@ weighting2 <- base + geom_function(fun = soy_function) +
   geom_line(linetype = "dashed", aes (group = pair)) +
   geom_line(data = subset(gap_data, pair == 2), linetype = "dotted", aes (group = pair), linetype = "dashed") +
   geom_label(data = subset(length_data, pair == 2),
-             aes(label = round(length, 4)),
+             aes(label = round(length, 2)),
              size = 8) +
   xlim(0, 200) +
   ylim(175, 260) +
@@ -93,7 +93,7 @@ weighting3 <- base + geom_function(fun = soy_function) +
   geom_line(linetype = "dashed", aes (group = pair)) +
   geom_line(data = subset(gap_data, pair == 3), linetype = "dotted", aes (group = pair)) +
   geom_label(data = subset(length_data, pair == 3),
-             aes(label = round(length, 4)),
+             aes(label = round(length, 2)),
              size = 8) +
   xlim(0, 200) +
   ylim(175, 260) +

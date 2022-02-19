@@ -74,7 +74,7 @@ weighting1 <- base + geom_function(fun = soy_function) +
   geom_line(linetype = "dashed", aes (group = pair)) +
   geom_line(data = subset(gap_data, pair == 1), linetype = "dotted", aes (group = pair)) +
   geom_label(data = subset(length_data, pair == 1),
-             aes(label = round(length, 4)),
+             aes(label = round(length, 2)),
              size = 8) +
   xlim(0, 200) +
   ylim(175, 260) +
@@ -88,7 +88,7 @@ weighting2 <- base + geom_function(fun = soy_function) +
   geom_line(linetype = "dashed", aes (group = pair)) +
   geom_line(data = subset(gap_data, pair == 2), linetype = "dotted", aes (group = pair), linetype = "dashed") +
   geom_label(data = subset(length_data, pair == 2),
-             aes(label = round(length, 4)),
+             aes(label = round(length, 2)),
              size = 8) +
   xlim(0, 200) +
   ylim(175, 260) +
@@ -107,13 +107,13 @@ weighting3 <- base + geom_function(fun = soy_function) +
   geom_line(linetype = "dashed", aes (group = pair)) +
   geom_line(data = subset(gap_data, pair == 3), linetype = "dotted", aes (group = pair)) +
   geom_label(data = subset(length_data, pair == 3),
-             aes(label = round(length, 4)),
+             aes(label = round(length, 2)),
              size = 8) +
   xlim(0, 200) +
   ylim(175, 260) +
   labs( y="Yield", x = "Seeding Rate (thousands/acre)")
 
-jensens <- (weighting1 | weighting2 | weighting3)
+jensens <- (weighting1)
 saveRDS(jensens, here("Results/jensens_inequality_figure.rds"))
 
 ##### uploading the results #####
@@ -186,7 +186,10 @@ profitshift <- ggplot(data = subset(results_others_means_raw, alignment_case == 
         axis.title.y=element_blank(),
         legend.position = "none")
 
-profit_no_cleaning <- (profitshift / profitangle / profitmismatch)
+profit_no_cleaning <- (profitshift / profitangle / profitmismatch) +
+  plot_annotation(tag_levels = 'A') & 
+  theme(plot.tag = element_text(size = 8))
+ 
 saveRDS(profit_no_cleaning, here("Results/profit_no_cleaning.rds"))
 
 ##### Profit density without cleaning ####
@@ -341,7 +344,9 @@ ratemismatch <- ggplot(data = subset(results_mismatch_means_rate_raw, error_degr
   theme(axis.title.y=element_blank(),
         legend.position = "none")
 
-rate_no_cleaning <- (rateshift / rateangle / ratemismatch)
+rate_no_cleaning <- (rateshift / rateangle / ratemismatch)  +
+  plot_annotation(tag_levels = 'A') & 
+  theme(plot.tag = element_text(size = 8))
 saveRDS(rate_no_cleaning, here("Results/rate_no_cleaning.rds"))
 
 ##### Rate with cleaning #####
@@ -513,6 +518,7 @@ low_data <- ggplot(data = subset(final_results_others_nitrogen, max_dev == 100 &
   guides(size = guide_legend(title = "Count"))
 
 factor_response <- (high_data | mid_data | low_data)
+factor_response_vertical <- (high_data / mid_data / low_data)
 saveRDS(factor_response, here("Results/factor_response.rds"))
 
 # change misalignment type
@@ -590,3 +596,34 @@ factor_maxdev <- ggplot(subset(final_results_others_nitrogen, error_degree == "3
 
 saveRDS(factor_maxdev, here("Results/factor_maxdev.rds"))
 
+
+#### Trial design example ####
+trial_grids <- readRDS("Data/Wendte_LaueLib80_2020/Raw/trial-grids-mismatch.rds")
+trial_grids <- dplyr::rename(trial_grids, "td_grid_id" = "td_grd_", "strip_id" = "strip_d")
+harvester_polygons <- readRDS("Data/Wendte_LaueLib80_2020/Raw/harvester-polygons-mismatch.rds")
+
+rates_ls <- c(41, 69, 97, 125, 153, 181)
+
+exp_design <- assign_rates(
+  filter(trial_grids, td_grid_id != "headland"), 
+  rates_ls
+) %>% 
+  data.table() %>% 
+  .[, .(td_grid_id, rate)]
+
+trial_design <- merge(trial_grids, exp_design, by = "td_grid_id")
+
+trial_design$rate <- as.factor(trial_design$rate)
+
+trial_design_map <- ggplot(trial_design) +
+  geom_sf(data = trial_design, aes(fill = rate), lwd = 0) +
+  theme(
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank()) +
+  guides(fill = guide_legend(title = "Target Rate")) +
+  scale_fill_brewer(palette="Blues")
+saveRDS(trial_design_map, file = here("Results", "trial_design_map.rds"))

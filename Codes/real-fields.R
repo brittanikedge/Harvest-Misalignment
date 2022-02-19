@@ -34,14 +34,14 @@ data_misalignment <- readRDS(here("Data/Bohnhoff_Schormann_2020/Analysis-Ready",
 data_wo_misalignment <- readRDS(here("Data/Bohnhoff_Schormann_2020/Analysis-Ready", "analysis_data_wo_misalignment.rds"))
 
 #### Maps of Data #####
-map_mis <- ggplot() +
+map_mis_1 <- ggplot() +
   geom_sf(data = data_misalignment, aes(fill = s_rate), lwd = 0) +
   scale_colour_distiller(palette = "Blues", 
                          type = "seq",
                          direction = 1,
                          guide = "colourbar",
                          aesthetics = c("fill")) +
-  labs(caption = "Field 1 data excluding \n areas with misalignment") + 
+  labs(caption = "Field 1 data \nwith misalignment") + 
   theme(
     plot.caption = element_text(color="black", size=10, hjust = 0.5),
     legend.position = "none",
@@ -52,14 +52,14 @@ map_mis <- ggplot() +
     panel.grid.minor = element_blank(),
     panel.background = element_blank())
 
-map_no_mis <- ggplot() +
+map_no_mis_1 <- ggplot() +
   geom_sf(data = data_wo_misalignment, aes(fill = s_rate), lwd = 0) +
   scale_colour_distiller(palette = "Blues", 
                          type = "seq",
                          direction = 1,
                          guide = "colourbar",
                          aesthetics = c("fill")) +
-  labs(caption = "Field 1 data excluding \n areas with misalignment") + 
+  labs(caption = "Field 1 data \nwithout misalignment") + 
   theme(
     plot.caption = element_text(color="black", size=10, hjust = 0.5),
     legend.position = "none",
@@ -70,8 +70,6 @@ map_no_mis <- ggplot() +
     panel.grid.minor = element_blank(),
     panel.background = element_blank())
 
-(map_mis + map_no_mis)
-ggsave("~/Box/Machine_Misalignment/Results/field1_data_map.jpeg")
 ##### Estimation #####
 ## Estimate gam and find profit maximizing rate
   
@@ -271,14 +269,14 @@ data_misalignment <- readRDS(here("Data/Campbell_Goldenrod_2020/Analysis-Ready",
 data_wo_misalignment <- readRDS(here("Data/Campbell_Goldenrod_2020/Analysis-Ready", "analysis_data_wo_misalignment.rds"))
 
 ##### Maps of Data #####
-map_mis <- ggplot() +
+map_mis_2 <- ggplot() +
   geom_sf(data = data_misalignment, aes(fill = s_rate), lwd = 0) +
   scale_colour_distiller(palette = "Blues", 
                          type = "seq",
                          direction = 1,
                          guide = "colourbar",
                          aesthetics = c("fill")) +
-  labs(caption = "Field 2 data including \n areas with misalignment") +
+  labs(caption = "Field 2 data \nwith misalignment") +
   theme(
     plot.caption = element_text(color="black", size=9, hjust = 0.5),
     legend.position = "none",
@@ -289,14 +287,14 @@ map_mis <- ggplot() +
     panel.grid.minor = element_blank(),
     panel.background = element_blank())
 
-map_no_mis <- ggplot() +
+map_no_mis_2 <- ggplot() +
   geom_sf(data = data_wo_misalignment, aes(fill = s_rate), lwd = 0) +
   scale_colour_distiller(palette = "Blues", 
                          type = "seq",
                          direction = 1,
                          guide = "colourbar",
                          aesthetics = c("fill")) +
-  labs(caption = "Field 2 data excluding \n areas with misalignment") +
+  labs(caption = "Field 2 data \nwithout misalignment") +
   theme(
     plot.caption = element_text(color="black", size=9, hjust = 0.5),
     legend.position = "none",
@@ -307,8 +305,7 @@ map_no_mis <- ggplot() +
     panel.grid.minor = element_blank(),
     panel.background = element_blank())
 
-(map_mis + map_no_mis)
-ggsave("~/Box/Machine_Misalignment/Results/field2_data_map.jpeg")
+# ggsave("~/Box/Machine_Misalignment/Results/field2_data_map.jpeg")
 ##### Estimation #####
 ## Estimate gam and find profit maximizing rate
 
@@ -417,14 +414,14 @@ data_misalignment <- readRDS(here("Data/Hord_F17_2020/Analysis-Ready", "analysis
 data_wo_misalignment <- readRDS(here("Data/Hord_F17_2020/Analysis-Ready", "analysis_data_wo_misalignment.rds"))
 
 ##### Maps of Data #####
-map_mis <- ggplot() +
+map_mis_3 <- ggplot() +
   geom_sf(data = data_misalignment, aes(fill = s_rate), lwd = 0) +
   scale_colour_distiller(palette = "Blues", 
                          type = "seq",
                          direction = 1,
                          guide = "colourbar",
                          aesthetics = c("fill")) +
-  labs(caption = "Field 3 data including \n areas with misalignment") +
+  labs(caption = "Field 3 data \nwith misalignment") +
   theme(
     plot.caption = element_text(color="black", size=10, hjust = 0.5),
     legend.position = "none",
@@ -435,14 +432,14 @@ map_mis <- ggplot() +
     panel.grid.minor = element_blank(),
     panel.background = element_blank())
 
-map_no_mis <- ggplot() +
+map_no_mis_3 <- ggplot() +
   geom_sf(data = data_wo_misalignment, aes(fill = s_rate), lwd = 0) +
   scale_colour_distiller(palette = "Blues", 
                          type = "seq",
                          direction = 1,
                          guide = "colourbar",
                          aesthetics = c("fill")) +
-  labs(caption = "Field 3 data excluding \n areas with misalignment") +
+  labs(caption = "Field 3 data \nwithout misalignment") +
   theme(
     plot.caption = element_text(color="black", size=10, hjust = 0.5),
     legend.position = "none",
@@ -453,8 +450,8 @@ map_no_mis <- ggplot() +
     panel.grid.minor = element_blank(),
     panel.background = element_blank())
 
-(map_mis + map_no_mis)
-ggsave("~/Box/Machine_Misalignment/Results/field3_data_map.jpeg")
+field_3_cleaning <- (map_mis + map_no_mis)
+# ggsave("~/Box/Machine_Misalignment/Results/field3_data_map.jpeg")
 
 ##### Estimation #####
 ## Estimate gam and find profit maximizing rate
@@ -648,3 +645,9 @@ profit_diff_table <- data.table(
   .[, y_hat := predict(scam_no_mis, newdata = .)] %>%
   .[, p_hat := y_hat * c_price - s_rate * s_price]
 profit_diff_table$p_hat[1] - profit_diff_table$p_hat[2] 
+
+
+real_field_cleaning <- ((map_mis_1 - map_no_mis_1 )/
+    (map_mis_3 - map_no_mis_3)) |
+  (map_mis_2 - map_no_mis_2)
+saveRDS(real_field_cleaning, here("Results/real_field_cleaning.rds"))   

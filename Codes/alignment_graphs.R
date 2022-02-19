@@ -112,7 +112,11 @@ alignment_map_angle <- ggplot(subset(map_data_for_plot, alignment_case == "angle
     axis.ticks = element_blank(),
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
-    panel.background = element_blank()) +
+    panel.background = element_blank(),
+    legend.position="right",
+    legend.justification="left",
+    legend.margin=margin(0,0,0,0),
+    legend.box.margin=margin(0,0,0,0)) +
   guides(fill = guide_legend(title = "Target Rate")) +
   scale_fill_brewer(palette="Blues")
   
@@ -133,7 +137,11 @@ alignment_map_shift <- ggplot(subset(map_data_for_plot, alignment_case == "mis-a
     axis.ticks = element_blank(),
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
-    panel.background = element_blank()) +
+    panel.background = element_blank(),
+    legend.position="none",
+    legend.justification="left",
+    legend.margin=margin(0,0,0,0),
+    legend.box.margin=margin(0,0,0,0)) +
   guides(fill = guide_legend(title = "Target Rate")) +
   scale_fill_brewer(palette="Blues")
 saveRDS(alignment_map_shift, file = here("Results", "alignment_map_shift.rds"))
@@ -225,7 +233,11 @@ alignment_map_mismatch <- ggplot(map_data_for_plot) +
     axis.ticks = element_blank(),
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
-    panel.background = element_blank()) +
+    panel.background = element_blank(),
+    legend.position="none",
+    legend.justification="left",
+    legend.margin=margin(0,0,0,0),
+    legend.box.margin=margin(0,0,0,0)) +
   guides(fill = guide_legend(title = "Target Rate")) +
   scale_fill_brewer(palette="Blues")
 

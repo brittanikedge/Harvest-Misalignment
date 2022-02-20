@@ -94,27 +94,28 @@ weighting2 <- base + geom_function(fun = soy_function) +
   ylim(175, 260) +
   labs( y="Yield", x = "Seeding Rate (thousands/acre)")
 
-new_data <- data.frame(X = c(r3, r4),
-                       Y = c(soy_function(r3), soy_function(r4)),
-                       pair = c(3, 3))
-base <- ggplot(new_data, aes(X, Y)) 
-
-weighting3 <- base + geom_function(fun = soy_function) +
-  geom_point(aes(x = r3, y = soy_function(r3))) +
-  geom_point(aes(x = r4, y = soy_function(r4))) +
-  geom_point(aes(x = .5*r3 + .5*r4, y = .5*soy_function(r3) + .5*soy_function(r4)), shape = 15) +
-  geom_point(aes(x = .5*r3 + .5*r4, y = soy_function(.5*r3 + .5*r4)), shape = 15) +
-  geom_line(linetype = "dashed", aes (group = pair)) +
-  geom_line(data = subset(gap_data, pair == 3), linetype = "dotted", aes (group = pair)) +
-  geom_label(data = subset(length_data, pair == 3),
-             aes(label = round(length, 2)),
-             size = 8) +
-  xlim(0, 200) +
-  ylim(175, 260) +
-  labs( y="Yield", x = "Seeding Rate (thousands/acre)")
+# new_data <- data.frame(X = c(r3, r4),
+#                        Y = c(soy_function(r3), soy_function(r4)),
+#                        pair = c(3, 3))
+# base <- ggplot(new_data, aes(X, Y)) 
+# 
+# weighting3 <- base + geom_function(fun = soy_function) +
+#   geom_point(aes(x = r3, y = soy_function(r3))) +
+#   geom_point(aes(x = r4, y = soy_function(r4))) +
+#   geom_point(aes(x = .5*r3 + .5*r4, y = .5*soy_function(r3) + .5*soy_function(r4)), shape = 15) +
+#   geom_point(aes(x = .5*r3 + .5*r4, y = soy_function(.5*r3 + .5*r4)), shape = 15) +
+#   geom_line(linetype = "dashed", aes (group = pair)) +
+#   geom_line(data = subset(gap_data, pair == 3), linetype = "dotted", aes (group = pair)) +
+#   geom_label(data = subset(length_data, pair == 3),
+#              aes(label = round(length, 2)),
+#              size = 8) +
+#   xlim(0, 200) +
+#   ylim(175, 260) +
+#   labs( y="Yield", x = "Seeding Rate (thousands/acre)")
 
 jensens <- (weighting1)
-saveRDS(jensens, here("Results/jensens_inequality_figure.rds"))
+ggsave(here("Results/jensens_inequality_figure.png"))
+# saveRDS(jensens, here("Results/jensens_inequality_figure.rds"))
 
 ##### uploading the results #####
 results_mismatch <- readRDS(file = here("Results", paste0("results_", paste0(c("mismatch"), collapse = "_"), "20sd", ".rds")))
@@ -161,7 +162,7 @@ profitmismatch <- ggplot(data = subset(results_mismatch_means_raw, error_degree 
   facet_grid(~ rate_types) +
   ylim(0, 12) +
   xlab("Error Level") +
-  ylab("Profit Difference from Optimal") + 
+  ylab("Profit Loss") + 
   guides(fill = guide_legend(title = "Yield Response")) + 
   theme(axis.title.y=element_blank(),
         legend.position = "none")
@@ -171,7 +172,7 @@ profitangle <- ggplot(data = subset(results_others_means_raw, alignment_case == 
   facet_grid(~ rate_types) +
   ylim(0, 12) +
   xlab("Error Level") +
-  ylab("Profit Difference from Optimal") + 
+  ylab("Profit Loss") + 
   guides(fill = guide_legend(title = "Yield Response")) + 
   theme(axis.title.x=element_blank())
 
@@ -180,7 +181,7 @@ profitshift <- ggplot(data = subset(results_others_means_raw, alignment_case == 
   facet_grid(~ rate_types) +
   ylim(0, 12) +
   xlab("Error Level") +
-  ylab("Profit Difference from Optimal") + 
+  ylab("Profit Loss") + 
   guides(fill = guide_legend(title = "Yield Response")) + 
   theme(axis.title.x=element_blank(),
         axis.title.y=element_blank(),
@@ -196,7 +197,7 @@ saveRDS(profit_no_cleaning, here("Results/profit_no_cleaning.rds"))
 profit_density_angle <- ggplot(data = subset(results_others, alignment_case == "angle" & error_degree != 0)) +
   geom_density(aes(x = profit_diff, fill = factor(error_degree)), alpha = 0.7, binwidth = 1) +
   facet_grid(rate_types ~ ys_type, scale = "free") +
-  xlab("Profit Difference from Optimal") +
+  xlab("Profit Loss") +
   ylab("Density") +
   guides(fill = guide_legend(title = "Error Level"))
 saveRDS(profit_density_angle, here("Results/profit_density_angle.rds"))
@@ -204,7 +205,7 @@ saveRDS(profit_density_angle, here("Results/profit_density_angle.rds"))
 profit_density_shift <- ggplot(data = subset(results_others, alignment_case == "mis-alignment" & error_degree != 0)) +
   geom_density(aes(x = profit_diff, fill = factor(error_degree)), alpha = 0.7, binwidth = 1) +
   facet_grid(rate_types ~ ys_type, scale = "free") +
-  xlab("Profit Difference from Optimal") +
+  xlab("Profit Loss") +
   ylab("Density") +
   guides(fill = guide_legend(title = "Error Level"))
 saveRDS(profit_density_shift, here("Results/profit_density_shift.rds"))
@@ -212,7 +213,7 @@ saveRDS(profit_density_shift, here("Results/profit_density_shift.rds"))
 profit_density_mismatch <- ggplot(data = subset(results_mismatch, error_degree != 1)) +
   geom_density(aes(x = profit_diff, fill = factor(error_degree)), alpha = 0.7, binwidth = 1) +
   facet_grid(rate_types ~ ys_type, scale = "free") +
-  xlab("Profit Difference from Optimal") +
+  xlab("Profit Loss") +
   ylab("Density") +
   guides(fill = guide_legend(title = "Error Level"))
 saveRDS(profit_density_mismatch, here("Results/profit_density_mismatch.rds"))
@@ -226,28 +227,22 @@ profit_clean_mismatch <- ggplot(data = subset(results_mismatch_means, error_degr
   geom_bar(stat = "identity", position = "dodge") +
   facet_grid(rate_types ~ ys_type) + 
   xlab("Error Level") +
-  ylab("Profit Difference from Optimal") + 
-  guides(fill = guide_legend(title = "Maximum Deviation \nParameter")) + 
-  theme(axis.title.y=element_blank(),
-        legend.position = "none")
+  ylab("Profit Change from Cleaning") + 
+  guides(fill = guide_legend(title = "Maximum Deviation \nParameter")) 
 
 profit_clean_shift <- ggplot(data = subset(results_others_means, error_degree != 0 & alignment_case == "mis-alignment"), aes(x = as.factor(error_degree), y = as.numeric(mean_diff), fill = as.factor(max_dev))) +
   geom_bar(stat = "identity", position = "dodge") +
   facet_grid(rate_types ~ ys_type) +
   xlab("Error Level") +
-  ylab("Profit Difference from Optimal") + 
-  guides(fill = guide_legend(title = "Maximum Deviation \nParameter")) + 
-  theme(axis.title.y=element_blank(),
-        axis.title.x=element_blank(),
-        legend.position = "none")
+  ylab("Profit Change from Cleaning") + 
+  guides(fill = guide_legend(title = "Maximum Deviation \nParameter"))
 
 profit_clean_angle <- ggplot(data = subset(results_others_means, error_degree != 0 & alignment_case == "angle"), aes(x = as.factor(error_degree), y = as.numeric(mean_diff), fill = as.factor(max_dev))) +
   geom_bar(stat = "identity", position = "dodge") +
   facet_grid(rate_types ~ ys_type) +
   xlab("Error Level") +
-  ylab("Profit Difference from Optimal") + 
-  guides(fill = guide_legend(title = "Maximum Deviation \nParameter")) + 
-  theme(axis.title.x=element_blank())
+  ylab("Profit Change from Cleaning") + 
+  guides(fill = guide_legend(title = "Maximum Deviation \nParameter"))
 
 profit_clean_shift
 saveRDS(profit_clean_shift, here("Results/profit_clean_shift.rds"))
@@ -262,7 +257,7 @@ saveRDS(profit_clean_mismatch, here("Results/profit_clean_mismatch.rds"))
 ##### Profit density with cleaning #####
 profit_density_mismatch_clean_75 <- ggplot(data = subset(results_mismatch, error_degree == 0.75)) +
   geom_density(aes(x = diff, fill = factor(max_dev)), alpha = 0.7, binwidth = 1) +
-  xlab("Profit Difference from Cleaning") +
+  xlab("Profit Change from Cleaning") +
   ylab("Density") + 
   facet_grid(ys_type ~ rate_types, scale = "free") +
   guides(fill = guide_legend(title = "Maximum Deviation \nParameter"))
@@ -270,7 +265,7 @@ saveRDS(profit_density_mismatch_clean_75, here("Results/profit_density_mismatch_
 
 profit_density_mismatch_clean_125 <- ggplot(data = subset(results_mismatch, error_degree == 1.25)) +
   geom_density(aes(x = diff, fill = factor(max_dev)), alpha = 0.7, binwidth = 1) +
-  xlab("Profit Difference from Cleaning") +
+  xlab("Profit Change from Cleaning") +
   ylab("Density") + 
   facet_grid(ys_type ~ rate_types, scale = "free") +
   guides(fill = guide_legend(title = "Maximum Deviation \nParameter"))
@@ -278,7 +273,7 @@ saveRDS(profit_density_mismatch_clean_125, here("Results/profit_density_mismatch
 
 profit_density_shift_clean_30 <- ggplot(data = subset(results_others, alignment_case == "mis-alignment" & error_degree == 30)) +
   geom_density(aes(x = diff, fill = factor(max_dev)), alpha = 0.7, binwidth = 1) +
-  xlab("Profit Difference from Cleaning") +
+  xlab("Profit Change from Cleaning") +
   ylab("Density") + 
   facet_grid(ys_type ~ rate_types, scale = "free") +
   guides(fill = guide_legend(title = "Maximum Deviation \nParameter"))
@@ -286,7 +281,7 @@ saveRDS(profit_density_shift_clean_30, here("Results/profit_density_shift_clean_
 
 profit_density_shift_clean_10 <- ggplot(data = subset(results_others, alignment_case == "mis-alignment" & error_degree == 10)) +
   geom_density(aes(x = diff, fill = factor(max_dev)), alpha = 0.7, binwidth = 1) +
-  xlab("Profit Difference from Cleaning") +
+  xlab("Profit Change from Cleaning") +
   ylab("Density") + 
   facet_grid(ys_type ~ rate_types, scale = "free") +
   guides(fill = guide_legend(title = "Maximum Deviation \nParameter"))
@@ -294,7 +289,7 @@ saveRDS(profit_density_shift_clean_10, here("Results/profit_density_shift_clean_
 
 profit_density_angle_clean_30 <- ggplot(data = subset(results_others, alignment_case == "angle" & error_degree == 30)) +
   geom_density(aes(x = diff, fill = factor(max_dev)), alpha = 0.7, binwidth = 1) +
-  xlab("Profit Difference from Cleaning") +
+  xlab("Profit Change from Cleaning") +
   ylab("Density") + 
   facet_grid(ys_type ~ rate_types, scale = "free") +
   guides(fill = guide_legend(title = "Maximum Deviation \nParameter"))
@@ -302,7 +297,7 @@ saveRDS(profit_density_angle_clean_30, here("Results/profit_density_angle_clean_
 
 profit_density_angle_clean_10 <- ggplot(data = subset(results_others, alignment_case == "angle" & error_degree == 10)) +
   geom_density(aes(x = diff, fill = factor(max_dev)), alpha = 0.7, binwidth = 1) +
-  xlab("Profit Difference from Cleaning") +
+  xlab("Profit Change from Cleaning") +
   ylab("Density") + 
   facet_grid(ys_type ~ rate_types, scale = "free") +
   guides(fill = guide_legend(title = "Maximum Deviation \nParameter"))
@@ -318,7 +313,7 @@ rateangle <- ggplot(data = subset(results_others_means_rate_raw, alignment_case 
   geom_bar(stat = "identity", position = "dodge") +
   ylim(-10, 45) +
   xlab("Error Level") +
-  ylab("Difference between \nEstimated and True Optimal Rate") + 
+  ylab("Estimated EONR - True EONR") + 
   facet_grid(~ rate_types) +
   guides(fill = guide_legend(title = "Yield Response")) + 
   theme(axis.title.x=element_blank())
@@ -327,7 +322,7 @@ rateshift <- ggplot(data = subset(results_others_means_rate_raw, alignment_case 
   geom_bar(stat = "identity", position = "dodge") +
   ylim(-10, 45) +
   xlab("Error Level") +
-  ylab("Difference between \nEstimated and True Optimal Rate") + 
+  ylab("Estimated EONR - True EONR") + 
   facet_grid(~ rate_types) +
   guides(fill = guide_legend(title = "Yield Response")) + 
   theme(axis.title.y=element_blank(),
@@ -338,13 +333,13 @@ ratemismatch <- ggplot(data = subset(results_mismatch_means_rate_raw, error_degr
   geom_bar(stat = "identity", position = "dodge") +
   ylim(-10, 45) +
   xlab("Error Level") +
-  ylab("Difference between \nEstimated and True Optimal Rate") + 
+  ylab("Estimated EONR - True EONR") + 
   facet_grid(~ rate_types) +
   guides(fill = guide_legend(title = "Yield Response")) + 
   theme(axis.title.y=element_blank(),
         legend.position = "none")
 
-rate_no_cleaning <- (rateshift / rateangle / ratemismatch)  +
+rate_no_cleaning <- (rateshift / rateangle / ratemismatch )  +
   plot_annotation(tag_levels = 'A') & 
   theme(plot.tag = element_text(size = 8))
 saveRDS(rate_no_cleaning, here("Results/rate_no_cleaning.rds"))
@@ -357,21 +352,21 @@ results_others_means_rate <- results_others[ ,list(mean_rate_diff = mean(rate_di
 rate_clean_mismatch <- ggplot(data = subset(results_mismatch_means_rate, error_degree != 1), aes(x = as.factor(error_degree), y = as.numeric(mean_rate_diff), fill = as.factor(max_dev))) +
   geom_bar(stat = "identity", position = "dodge") +
   xlab("Error Level") +
-  ylab("Difference between Clean and \nRaw Estimated Optimal Input") + 
+  ylab("EONR with cleaning - EONR without cleaning") + 
   facet_grid(rate_types ~ ys_type) +
   guides(fill = guide_legend(title = "Maximum Deviation \nParameter"))
 
 rate_clean_shift <- ggplot(data = subset(results_others_means_rate, error_degree != 0 & alignment_case == "mis-alignment"), aes(x = as.factor(error_degree), y = as.numeric(mean_rate_diff), fill = as.factor(max_dev))) +
   geom_bar(stat = "identity", position = "dodge") +
   xlab("Error Level") +
-  ylab("Difference between Clean and \nRaw Estimated Optimal Input") + 
+  ylab("EONR with cleaning - EONR without cleaning") + 
   facet_grid(rate_types ~ ys_type) +
   guides(fill = guide_legend(title = "Maximum Deviation \nParameter"))
 
 rate_clean_angle <- ggplot(data = subset(results_others_means_rate, error_degree != 0 & alignment_case == "angle"), aes(x = as.factor(error_degree), y = as.numeric(mean_rate_diff), fill = as.factor(max_dev))) +
   geom_bar(stat = "identity", position = "dodge") +
   xlab("Error Level") +
-  ylab("Difference between Clean and \nRaw Estimated Optimal Input") + 
+  ylab("EONR with cleaning - EONR without cleaning") + 
   facet_grid(rate_types ~ ys_type) +
   guides(fill = guide_legend(title = "Maximum Deviation \nParameter"))
 
@@ -389,7 +384,7 @@ saveRDS(rate_clean_mismatch, here("Results/rate_clean_mismatch.rds"))
 rate_density_mismatch <- ggplot(data = subset(results_mismatch, error_degree != 1)) +
   geom_density(aes(x = rate_diff_raw, fill = factor(error_degree)), alpha = 0.7, binwidth = 1) +
   facet_grid(rate_types ~ ys_type, scale = "free") +
-  xlab("Difference between Estimated and True Optimal Rate") +
+  xlab("Estimated EONR - True EONR") +
   ylab("Density") +
   guides(fill = guide_legend(title = "Error Level"))
 saveRDS(rate_density_mismatch, here("Results/rate_density_mismatch.rds"))
@@ -397,7 +392,7 @@ saveRDS(rate_density_mismatch, here("Results/rate_density_mismatch.rds"))
 rate_density_angle <- ggplot(data = subset(results_others,  alignment_case == "angle" & error_degree != 0)) +
   geom_density(aes(x = rate_diff_raw, fill = factor(error_degree)), alpha = 0.7, binwidth = 1) +
   facet_grid(rate_types ~ ys_type, scale = "free") +
-  xlab("Difference between Estimated and True Optimal Rate") +
+  xlab("Estimated EONR - True EONR") +
   ylab("Density") +
   guides(fill = guide_legend(title = "Error Level"))
 saveRDS(rate_density_angle, here("Results/rate_density_angle.rds"))
@@ -405,7 +400,7 @@ saveRDS(rate_density_angle, here("Results/rate_density_angle.rds"))
 rate_density_shift <- ggplot(data = subset(results_others,  alignment_case == "mis-alignment" & error_degree != 0)) +
   geom_density(aes(x = rate_diff_raw, fill = factor(error_degree)), alpha = 0.7, binwidth = 1) +
   facet_grid(rate_types ~ ys_type, scale = "free") +
-  xlab("Difference between Estimated and True Optimal Rate") +
+  xlab("Estimated EONR - True EONR") +
   ylab("Density") +
   guides(fill = guide_legend(title = "Error Level"))
 saveRDS(rate_density_shift, here("Results/rate_density_shift.rds"))
@@ -413,7 +408,7 @@ saveRDS(rate_density_shift, here("Results/rate_density_shift.rds"))
 ##### Rate density with cleaning #####
 rate_density_mismatch_clean_75 <- ggplot(data = subset(results_mismatch, error_degree == 0.75)) +
   geom_density(aes(x = rate_diff_cleaning, fill = factor(max_dev)), alpha = 0.7, binwidth = 1) +
-  xlab("Difference between estimated rate after cleaning and before cleaning") +
+  xlab("EONR with cleaning - EONR without cleaning") +
   ylab("Density") + 
   facet_grid(ys_type ~ rate_types, scale = "free") +
   guides(fill = guide_legend(title = "Maximum Deviation \nParameter"))
@@ -421,7 +416,7 @@ saveRDS(rate_density_mismatch_clean_75, here("Results/rate_density_mismatch_clea
 
 rate_density_mismatch_clean_125 <- ggplot(data = subset(results_mismatch, error_degree == 1.25)) +
   geom_density(aes(x = rate_diff_cleaning, fill = factor(max_dev)), alpha = 0.7, binwidth = 1) +
-  xlab("Difference between estimated rate after cleaning and before cleaning") +
+  xlab("EONR with cleaning - EONR without cleaning") +
   ylab("Density") + 
   facet_grid(ys_type ~ rate_types, scale = "free") +
   guides(fill = guide_legend(title = "Maximum Deviation \nParameter"))
@@ -429,7 +424,7 @@ saveRDS(rate_density_mismatch_clean_125, here("Results/rate_density_mismatch_cle
 
 rate_density_shift_clean_30 <- ggplot(data = subset(results_others, alignment_case == "mis-alignment" & error_degree == 30)) +
   geom_density(aes(x = rate_diff_cleaning, fill = factor(max_dev)), alpha = 0.7, binwidth = 1) +
-  xlab("Difference between estimated rate after cleaning and before cleaning") +
+  xlab("EONR with cleaning - EONR without cleaning") +
   ylab("Density") + 
   facet_grid(ys_type ~ rate_types, scale = "free") +
   guides(fill = guide_legend(title = "Maximum Deviation \nParameter"))
@@ -437,7 +432,7 @@ saveRDS(rate_density_shift_clean_30, here("Results/rate_density_shift_clean_30.r
 
 rate_density_shift_clean_10 <- ggplot(data = subset(results_others, alignment_case == "mis-alignment" & error_degree == 10)) +
   geom_density(aes(x = rate_diff_cleaning, fill = factor(max_dev)), alpha = 0.7, binwidth = 1) +
-  xlab("Difference between estimated rate after cleaning and before cleaning") +
+  xlab("EONR with cleaning - EONR without cleaning") +
   ylab("Density") + 
   facet_grid(ys_type ~ rate_types, scale = "free") +
   guides(fill = guide_legend(title = "Maximum Deviation \nParameter"))
@@ -445,7 +440,7 @@ saveRDS(rate_density_shift_clean_10, here("Results/rate_density_shift_clean_10.r
 
 rate_density_angle_clean_30 <- ggplot(data = subset(results_others, alignment_case == "angle" & error_degree == 30)) +
   geom_density(aes(x = rate_diff_cleaning, fill = factor(max_dev)), alpha = 0.7, binwidth = 1) +
-  xlab("Difference between estimated rate after cleaning and before cleaning") +
+  xlab("EONR with cleaning - EONR without cleaning") +
   ylab("Density") + 
   facet_grid(ys_type ~ rate_types, scale = "free") +
   guides(fill = guide_legend(title = "Maximum Deviation \nParameter"))
@@ -453,7 +448,7 @@ saveRDS(rate_density_angle_clean_30, here("Results/rate_density_angle_clean_30.r
 
 rate_density_angle_clean_10 <- ggplot(data = subset(results_others, alignment_case == "angle" & error_degree == 10)) +
   geom_density(aes(x = rate_diff_cleaning, fill = factor(max_dev)), alpha = 0.7, binwidth = 1) +
-  xlab("Difference between estimated rate after cleaning and before cleaning") +
+  xlab("EONR with cleaning - EONR without cleaning") +
   ylab("Density") + 
   facet_grid(ys_type ~ rate_types, scale = "free") +
   guides(fill = guide_legend(title = "Maximum Deviation \nParameter"))

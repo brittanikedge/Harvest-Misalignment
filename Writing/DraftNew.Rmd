@@ -4,7 +4,7 @@ output:
   bookdown::word_document2:
     reference_docx: "word_template.docx"
     fig_caption: yes
-    number_sections: no
+    number_sections: yes
     pandoc_args: ["-Fpandoc-crossref"]
 bibliography: "misalignment.bib"
 ---
@@ -40,6 +40,9 @@ library(parallel)
 library(tidyverse)
 library(data.table)
 library(dplyr)
+library(png)
+library(grid)
+library(jpeg)
 ```
 
 ```{r loadresults, results = "hide"}
@@ -116,7 +119,10 @@ On-farm experimentation has a long history in the agronomic study, beginning wit
 
 add reference to the OFE conference and number of DIFM trials
 
-![(#fig:trial) Example of an OFPE](/Users/brittaniedge/Library/CloudStorage/Box-Box/HarvestMisalignment/Results/trialexample.png)
+```{r trial,  fig.cap = "Example of an OFPE", fig.height = 4, echo=FALSE}
+img <- readPNG(here("Results/trialexample.png"))
+ grid.raster(img)
+```
 
 Farmer-operated trials benefits both farmers and researchers; farmers receive more personalized information about optimal treatments for their fields, and researchers can begin putting trials together across a region to analyze larger patterns in optimal management practices, as described by Laurent et al. [-@laurent_kyveryga_makowski_miguez_2019]. Additionally, these whole-farm trials have significant advantages over traditional small-plot trials regarding the number of replicates and field conditions covered. A whole-farm trial can attain spatially balanced treatments without soil tests and have many replicates, while prior information is needed to determine sites within a field for small plot trials.
  
@@ -124,8 +130,15 @@ Past research on PAT has looked extensively into creating management zones and c
 
 During the data processing of OFPE, the various point layers of inputs and harvest need to be combined into a single layer where units of observation are established for analysis. Analyzing the results of the trial requires associated inputs levels for each yield observation, but observing the point layers does not indicate what treatment a yield observation received. To define these units, many decisions are made by researchers. Those decisions may have little effect when a trial is well-implemented, and the trial grid lines up well with the treatments. However, those decisions have different implications when there is misalignment in the different data layers. Standard trial design procedures attempt to avoid these errors; research and university guides for trial design mention the importance of equipment size when determining the trial plot’s width (Licht and Witt 2019). Specifically, the trial should be designed and implemented so that the yield monitor is collecting from only one input rate in a pass. Figure \@ref(fig:misalignment) illustrates the expected alignment and an example of harvest misalignment for a trial with a harvester that is half the width of the planter. The green points are harvest data, and the blue points are as-planted data. The blue and green arrowed boxes represent the harvester and planter; the box width represents machinery swath widths, and the arrows point in the direction driven. The panels show contrasting examples of harvest alignment.The left-panel has the planter going down the middle of trial plot and the harvester starting a quarter of the way into the plot to have two complete passes inside the trial plot. The right panel has one harvest pass close to the middle of the plot with the planter, resulting in the other pass harvesting crop outside of the trial plot. Figure \@ref(fig:misalignment-poly) creates polygons around the harvest and changes the color of the background based on the planting rate. When there is harvest misalignment, only the center harvest pass collects from a single planting. The other two harvest passes are collecting from two different planting rates. 
 
-![(#fig:misalignment) Harvest Misalignment Example](/Users/brittaniedge/Library/CloudStorage/Box-Box/HarvestMisalignment/Results/misalignment_figure.png)
-![(#fig:misalignment-poly) Examples of harvest and asapplied points](/Users/brittaniedge/Library/CloudStorage/Box-Box/HarvestMisalignment/Results/misalignment_poly.png)
+```{r misalignment,  fig.cap = "Harvest Misalignment Example", fig.height = 4, echo=FALSE}
+img <- readPNG(here("Results/misalignment_figure.png"))
+ grid.raster(img)
+```
+
+```{r misalignment-poly,  fig.cap = "Examples of harvest and asapplied points", fig.height = 4, echo=FALSE}
+img <- readPNG(here("Results/misalignment_poly.png"))
+ grid.raster(img)
+```
 
 Harvest misalignment comes from producer practices, such as planting and harvesting with different headings, miscommunications about the proper heading for harvest, and machinery size. To achieve this harvest alignment, the plot width should be multiple of the yield monitor width, but producers do not purchase their equipment with the expectation of running OFPEs. Thus, the machinery widths may not have a reasonable least common multiple for running a trial, and misalignment will be present in the data. Past research does not address data processing when there is misalignment in OFE harvest data. 
 
@@ -144,7 +157,7 @@ The second type of harvest misalignment occurs when there are different headings
 
 Incompatible machine widths, which happens when one machine width is not an exact multiple of another’s, cause the third type of misalignment problem. Panel (C) of figure \@ref(fig:alignment-maps) are maps of the harvest and application polygons from incompatible machine sizes with harvester to applicator width ratios of 0.75 and 1.25. A ratio of 0.75 of harvester results in some yield polygons inside a single treatment and others in two treatments. A ratio of 1.25 is a harvester larger than the applicator; thus, all yield polygons will have two input rates present. 
 
-```{r alignment-maps, echo=FALSE, fig.cap="Examples of Harvest Misalignment due to a Parallel Shift, Different Headings, and Incompatible Machinery Widths"}
+```{r alignment-maps, echo=FALSE, fig.cap="Examples of Harvest Misalignment due to a Parallel Shift, Different Headings, and Incompatible Machinery Widths", fig.width = 6.5, figure.height = 7.5}
 patchwork <- (alignment_map_shift / alignment_map_angle / alignment_map_mismatch)
 patchwork +
   plot_annotation(tag_levels = 'A') & 
@@ -157,7 +170,10 @@ The OFPE data is reported as points, and researchers create units of observation
 
 The first approach for processing OFPE data centers around the original trial plots, using subplots of the trial plots as the unit of observation. This approach is similar to the units of observation seen in small-plot data. Figure \@ref(fig:naivecleaning) illustrates this data processing approach. In the first panel, the harvest and nitrogen points are shown inside one trial plot outlined in red. The subplots in the last panel represent the final units of observation, where the median value of the yield and as-applied points is calculated inside each subplot. This approach assumes any harvest value in a trial plot received the input amounts observed in the same plot. Taking the mean of the points inside a trial plot weights observations near the plot’s edge equally with those near its middle. However, the coverage area of the point in the middle of the plot is a larger percentage of the plot area than the coverage area of the point near the edge of the plot. Thus, thinking about the area each point covers in the field can improve the data processing approach.
 
-![(#fig:naivecleaning) Data processing based on the initial trial plots](/Users/brittaniedge/Library/CloudStorage/Box-Box/HarvestMisalignment/Results/naivecleaning.png)
+```{r naivecleaning,  fig.cap = "Data processing based on the original trial design plots", fig.height = 4, echo=FALSE}
+img <- readPNG(here("Results/naivecleaning.png"))
+ grid.raster(img)
+```
 
 The second approach to creating units of observation addresses this problem by using yield polygons as the building blocks for the final unit. Polygons of the harvest and input application depict the area of the field where those values were applied and harvested when compared to point data that do not indicate the full area the point represents^[Appendix \@ref(polygons) includes a figure of harvest points and polygons.]. Intersecting the yield and input polygons, the values may reveal that some yield observations came from areas that received two different input rates. For example, figure \@ref(fig:misalignment_poly) shows the intersection of yield and planting polygons with and without harvest misalignment; the yield polygons are outlined in black, and the shade of the blue polygons shows the planting rate, with darker blue being a higher rate. The field in the left panel has most yield polygons coming from one seeding rate, but the field in the right panel has yield polygons harvesting from two or more planting rates.
 
@@ -168,18 +184,20 @@ The problem with this approach comes from the shape of the yield response curve.
 $$f(\lambda_{1}*N_{1} + \lambda_{2}*N_{2}) \ge \lambda_{1}*f(N_{1}) + \lambda_{2}*f(N_{2})  (1)$$
 The difference between the true value on the left-hand side of the equation and the averaged value on the right-hand side is called the Jensen Gap. The size  depends on the concavity of the response function, the difference between the two input rates, and the weighting of the points [@gao_sitharam_roitberg_2019]. Figure \@ref(fig:jensens) presents an example of the Jensen Gap with a yield response function. The harvester straddled two trial plots with 30 and 100 thousand seed per acre treatments. The dotted line drawn between the two treatments points is the line of linear combinations possible with these two treatments. In this example, the harvester was equally in the two trial plots, resulting in the weights $\lambda_{1} = \lambda_{2} = 0.5$. The averaged observation will be 10.8 bushels per acre below the true yield point at that seeding rate.  If the harvester was further in one trial plot than the other, the weights would be unequal, and the Jensen Gap would decrease. In practice, this means if most of the yield area received one treatment, the impact of averaging the values will be smaller than when the two treatments cover similar areas in the yield polygon.
 
-```{r jensens, echo=FALSE, fig.cap="Examples of Jensen's Inequality with Yield Response to Seeding Rate", fig.height=4}
-jensens_figure 
+```{r jensens,  fig.cap = "Example of Jensen's Inequality with Yield Response to Seeding Rate", fig.height = 4, echo=FALSE}
+img <- readPNG(here("Results/jensens_inequality_figure.png"))
+ grid.raster(img)
 ```
+
 # Methods: Deterministic Analysis and Monte Carlo Simulation
 
 This paper includes both a deterministic analysis and a Monte Carlo simulation to investigate the impact of harvest misalignment on the estimated yield response function and EONR from an OFPE. The trial design, implementation, and assumed underlying yield response functions are the same for both analyses, but the Monte Carlo simulation introduces errors in the input application, harvester yield reporting, and spatial correlated errors. The deterministic analysis introduces the themes we will discuss in the simulation study and provides an illustration of how harvest misalignment impacts the estimated yield response. We present the impact of each of the trial factors independently; thus, we do not present the results for every factor combination in the deterministic analysis.
- 
+
 ## Experimental Field and Trial Design
 
 The trial setup is for an applicator and harvester of 60-feet, so each experimental plot is 60-feet wide. The input rates follow a latin-square design, where each target rate appears in every row and column of a block; this makes the target rates spatially balanced across the field. There are six target rates with a 140 pound range that is either centered around the true EONR or is 10 pounds above or below the true EONR. Figure \@ref(fig:trial-design-map) is an example of one of the trial designs. We assume that the applicator heading aligns with the trial design; thus, the harvester will be the only source of misalignment in this analysis. In practice, there can be multiple sources of misalignment in OFPE data.
 
-```{r trial-design-map, echo=FALSE, fig.cap="Example of a simulated trial design", fig.height=4}
+```{r trial-design-map, echo=FALSE, fig.cap="Example of a simulated trial design", fig.width = 6.5, fig.height=4}
 trial_design_map
 ```
 
@@ -201,7 +219,7 @@ $yield_{max}$ is the yield plateau for this field and crop, $\beta_2$ is the lev
 
 Equations 4 to 6 present the yield response functions for the simulation, and figure \@ref(fig:functionsgraph) graphs the functions to compare curvature. Clockwise from the upper-left, the figure presents the low-curvature, mid-curvature, and the high-curvature response functions. Equation 4 presents the MB equation for the low-curvature case. Note that there are $\beta_2$ = 140 pounds of nitrogen in the soil, and the curve looks more linear than the other functions, with the marginal product of nitrogen decreasing more slowly than in the other functions. The low-curvature response represents a case where there is adequate nitrogen in the soil, and the yield is likely being suppressed by other limiting factors. Equation 5 presents the middle-curvature case with $\beta_2$ = 70 pounds of nitrogen in the soil and might be a field with adequate levels of other nutrients that benefits from additional nitrogen. Equation 6 is the high-curvature response and assumes $\beta_2$ = 110 pounds of nitrogen in the soil. This field is similar to the middle-curvature field but has more nitrogen in the soil, resulting in a faster decrease in marginal yield response to nitrogen. From Jensen’s Inequality, we expect the impact on the estimated EONR will increase with the concavity of the yield response function.
 
-```{r functionsgraph, echo=FALSE, fig.cap="Graphs of the yield response functions. From the upper-left corner, low-curvature yield response to nitrogen, mid-curvature yield response to nitrogen, and high-curvature yield response nitrogen", fig.height=4}
+```{r functionsgraph, echo=FALSE, fig.cap="Graphs of the yield response functions to nitrogen: (A) low-curvature response, (B) mid-curvature response, and (C) high-curvature response", fig.width = 6.5, fig.height=4}
 response_figure
 ```
 
@@ -211,7 +229,7 @@ $$Yield_{j}= f_{}(TargetRate_{j}) + u + \gamma\ (7)$$
 
 After an analysis of residuals from nine OFPE corn trials, we use a standard deviation of 20 bushels per acre for the normal error. While the standard deviation of the trial residuals ranges from 10 to 40 bushels per acre, the average is 20 bushels per acre.
 
-The spatially correlated error $\gamma(h,\theta)$ follows the spherical variogram model as presented in equation 8 with a range of 400 meters, p-sill of 400, and a nugget of 0. 
+The spatially correlated error $\gamma(h,\theta)$ follows the spherical variogram model as presented in equation 8 with a range of 400 meters, p-sill of 400, and a nugget of 0^[A simulated spatial error map following this variogram is available in Appendix \@ref(spatialerrors)]. 
 $$
 \begin{equation}
 \gamma(h,\theta)=
@@ -298,35 +316,35 @@ Figures \@ref(fig:factor-response) to \@ref(fig:factor-rates) show how the estim
 ### Yield response functions
 Figure \@ref(fig:factor-response) demonstrates the impact of the yield response function on the estimated yield response function. The curvature of the yield response functions decreases from left to right. These datasets come from a 30-foot parallel shift; thus, all the data lies under the true yield response functions. With the decrease in the curvature, the gap between the true function and the estimated function decreases. The first panel shows a yield response function with high curvature, and the estimated yield response flattens the true yield response. The last panel is the most linear yield response function, and aggregating this data has a smaller effect on the estimated yield response function.
 
-```{r factor-response, echo=FALSE, fig.cap="Impact of yield response function on the estimation of the yield response function with OFE data", fig.height=4}
+```{r factor-response, echo=FALSE, fig.cap="Impact of the curvature of the assumed yield response function on the estimation of the yield response function with OFE data", fig.width = 6.5, fig.height=4}
 factor_response
 ```
 
 ### Misalignment types
 Figure \@ref(fig:factor-type) shows the aggregated datasets under the different types of harvest misalignment. Each misalignment type creates different weights and final datasets. With a parallel shift or incompatible machinery sizes, every pass of the harvester will have the same weights. This produces many data points with the same values in the datasets. On the other hand, different headings mean a single pass of the harvester will contain many unique weights. This results in points along the lines of linear combinations between the different trial rates. With different headings or a harvester that is smaller than the applicator, the dataset has some points that lie on the true yield response function, but a parallel shift results in a dataset of all aggregated yield observations. The parallel shift has the greatest impact on the yield response estimation, flattening the concave function to a line. Although there are good data with a harvester smaller than the applicator, the presence of the good data at the ends of the response curve distort the slope of the yield response curve. This change in curvature could greatly impact the estimation of the optimal input rate. 
 
-```{r factor-type, echo=FALSE, fig.cap="Impact of misalignment type on the estimation of the yield response function with OFE data", fig.height=4}
+```{r factor-type, echo=FALSE, fig.cap="Impact of the harvest misalignment type on the estimation of the yield response function with OFE data", fig.width = 6.5, fig.height=4}
 factor_type
 ```
 
 ### Degree of misalignment
 For all misalignment types, the degree of misalignment also impacts the estimation of the yield response function. With the parallel shift, the shift value is the degree of misalignment. Figure \@ref(fig:factor-error) shows the yield estimations for a 0, 10, and 30-foot parallel shift. The different shift amounts result in different weights along the line of linear combinations seen in the Jensen’s Inequality example. The 0-foot shift represents no misalignment; thus, the estimated yield response is very close to the true yield response. The equal weighting from the 30-foot shift results in a larger Jensen Gap and a more dramatic flattening of the yield response function.
 
-```{r factor-error, echo=FALSE, fig.cap="Impact of error degree on the estimation of the yield response function with OFE data", fig.height=4}
+```{r factor-error, echo=FALSE, fig.cap="Impact of harvest misalignment error degree on the estimation of the yield response function with OFE data", fig.width = 6.5, fig.height=4}
 factor_error
 ```
 
 ### Trial rates
 Figure \@ref(fig:factor-rates) shows the impact of the trial rates on the estimated yield response function. Aggregating trial rates in a flat part of the function, such as the plateau of a concave function will result in a smaller Jensen Gap than aggregating trial rates in parts of the function with more curvature. In the examples below, the low rates overestimate the slope of the response function, likely leading to an overestimation of the optimal input rate. With the concave function, the estimated yield response functions will generally become flatter as the trial rates increase. Without knowledge about the true yield response function and EONR, designing a trial with rates centered away from the true EONR is likely. 
 
-```{r factor-rates, echo=FALSE, fig.cap="Impact of trial rates on the estimation of the yield response function with OFE data", fig.height=4}
+```{r factor-rates, echo=FALSE, fig.cap="Impact of the trial rates on the estimation of the yield response function with OFE data", fig.width = 6.5, fig.height=4}
 factor_rates
 ```
 
 ### $MaxDev$ Value
 Figure \@ref(fig:factor-maxdev) illustrates the cleaned datasets and estimated yield response functions with different $MaxDev$ values, 20, 30, and 40 pounds of nitrogen per acre. The highest $MaxDev$ of 100 uses the full dataset with harvest misalignment, and the other values represent different levels of restriction in the data. As $MaxDev$ decreases, more data points from disparate trial rates are removed, and the gap between the estimated yield response function in red and the true yield response function in black decreases.   
 
-```{r factor-maxdev, echo=FALSE, fig.cap="Impact of cleaning parameter on the estimation of the yield response function with OFE data", fig.height=4}
+```{r factor-maxdev, echo=FALSE, fig.cap="Impact of cleaning parameter on the estimation of the yield response function with OFE data", fig.width = 6.5, fig.height=4}
 factor_maxdev
 ```
 
@@ -334,7 +352,7 @@ factor_maxdev
 
 ### Yield response functions
 
-Consistent with the initial hypothesis, the concavity of the yield response function increases the effects of harvest misalignment in terms of profit losses and estimated optimal input rates. Despite the propensity for corner solutions with the linear yield response, the profit differences are still minor due to the low yield response. The average profit differences for all low-curvature yield simulations are below \$5 per acre and mostly below \$3 per acre. Under all the misalignment types and most trial rates, the profit losses increase as curvature increases. For example, under a 30-foot parallel shift and centered target rates, the average profit differences are \$3, \$6, and \$12 per acre for low, middle, and high curvature, respectively. The density graphs in figures \@ref(fig:profit-nocleaning-misalignment) to \@ref(fig:profit-nocleaning-shift) indicate that the range and variation of $\hat{EONR}$ increases as the assumed yield response function becomes more linear. The density graphs of the estimated EONR in the low and middle curvature yield responses often has two or three modes due to corner solutions. While the average profit losses are less than \$5 per acre, the density curves show modes at \$10 and \$15 per acre when there is a large overestimation or underestimation of the EONR. With the highest curvature, the variation in EONR is smaller, with fewer modes in the distribution. Often there are two modes, one close to the true EONR and one either overestimating or underestimating. While the profit losses at these modes may be lower than for the lowest curvature yield response, the incidence is higher, leading to more profit losses on average. 
+Consistent with the initial hypothesis, the concavity of the yield response function increases the effects of harvest misalignment in terms of profit losses and estimated optimal input rates. Despite the propensity for corner solutions with the linear yield response, the profit differences are still minor due to the low yield response. The average profit differences for all low-curvature yield simulations are below \$5 per acre and mostly below \$3 per acre. Under all the misalignment types and most trial rates, the profit losses increase as curvature increases. For example, under a 30-foot parallel shift and centered target rates, the average profit differences are \$3, \$6, and \$12 per acre for low, middle, and high curvature, respectively. The density graphs in figures \@ref(fig:profit-nocleaning-mismatch), \@ref(fig:profit-nocleaning-angle), and \@ref(fig:profit-nocleaning-shift) indicate that the range and variation of $\hat{EONR}$ increases as the assumed yield response function becomes more linear. The density graphs of the estimated EONR in the low and middle curvature yield responses often has two or three modes due to corner solutions. While the average profit losses are less than \$5 per acre, the density curves show modes at \$10 and \$15 per acre when there is a large overestimation or underestimation of the EONR. With the highest curvature, the variation in EONR is smaller, with fewer modes in the distribution. Often there are two modes, one close to the true EONR and one either overestimating or underestimating. While the profit losses at these modes may be lower than for the lowest curvature yield response, the incidence is higher, leading to more profit losses on average. 
 
 ### Misalignment types
 
@@ -348,62 +366,81 @@ There are also differences in the impacts on the estimated optimal rates with di
 
 The trial rates produce some of the largest changes in average profit losses. For example, in figure \@ref(fig:profit-nocleaning) moving from rates that are centered around the optimal rate to rates centered below the optimal decreases the profit losses by about half. Moving the trials rates along the curve will change the curvature being estimated and producing the averaged dataset. From the Jensen’s inequality example, the areas with more curvature will have a greater gap between the response curve and averaged data. Thus, it follows that moving the data along the response curve will change the impacts on the estimation of the response function. In OFPE trial design, this factor can represent a set of rates that is higher or lower than the true optimal rate or a price change that can shift the trial rates away from the true optimal rate. When the trial rates are centered lower than the EONR, the trial data is in the area of the yield response with the highest slope; thus, the estimated yield response function has a higher slope. This is why the density graphs indicate that the estimated EONR is higher than the true EONR for low rates. In contrast, the high trial rates are in the flattest part of the yield response function and produce an estimated yield response that is flatter than the true response. In this case, the profit losses are due to underestimation of the EONR.
  
-### Importance of EONR Overestimation 
-
-The profit losses indicate the estimated optimal input rates are differing from the true optimal rate, but an analysis of the difference between the estimated and true optimal input rate shows a consistent overestimation of the optimal nitrogen rate for most scenarios. Figure \@ref(fig:rate-nocleaning) presents the average results of the difference between the estimated EONR and true EONR by yield response, harvest alignment type, trial rates, and error level. Given the environmental cost to the over-application of nitrogen due to potential leaching and runoff, this is also an important result to consider in OFPE. For example, the high-curvature nitrogen response function results in the over-application of nitrogen for all harvest misalignment types at the highest error level, ranging from 8 to 40 pounds of nitrogen per acre over the optimal rate. Further, all of the misalignment types produced a significant overestimation of the optimal input rate under at least one trial scenario, 40, 25, and 45 pounds per acre for parallel shift, heading difference, and incompatible machinery respectively. The estimated optimal nitrogen rates would result in large excesses of nitrogen applied over whole fields. For some low and middle concavity functions, particularly those with uncentered trial rates, the estimated optimal input rate is below the true optimal rate. The greatest underestimation is about 12 pounds of nitrogen per acre with a 10-foot parallel shift and low trial rates; most underestimation are less than 5 pounds per acre. While not producing the environmental costs of over-application, the risk of under-applying could reduce producer profits under certain weather conditions.
-
-```{r profit-nocleaning, echo=FALSE, fig.cap="Average profit differences by error degree, yield response, and misalignment type", fig.height=4}
-profit_no_cleaning /
-  rate_no_cleaning
+```{r profit-nocleaning, echo=FALSE, fig.cap="Average profit differences produced by the estimated EONR by error degree, yield response, and misalignment types, where (A) is parallel shift, (B) is a heading difference, and (C) is incompatible machinery", fig.height = 4, fig.width = 6.5}
+profit_no_cleaning
 ```
 
-```{r profit-nocleaning-mismatch, echo=FALSE, fig.cap="Average profit differences by error degree, yield response, and misalignment type", fig.height=4}
+```{r profit-nocleaning-mismatch, echo=FALSE, fig.cap="(A) Density graphs of the profit differences produced by the estimated EONR by error degree, yield response, and trial rates with incompatible machinery \n(B) Density graphs of the difference between the estimated and true EONR by error degree, yield response, and trial rates with incompatible machinery", fig.height = 8, fig.width = 6.5}
 profit_density_mismatch /
 rate_density_mismatch  +
   plot_annotation(tag_levels = 'A') & 
   theme(plot.tag = element_text(size = 8))
 ```
 
-```{r profit-nocleaning-angle, echo=FALSE, fig.cap="Average profit differences by error degree, yield response, and misalignment type", fig.height=4}
+```{r profit-nocleaning-angle, echo=FALSE, fig.cap="(A) Density graphs of the profit differences produced by the estimated EONR by error degree, yield response, and trial rates with different headings. \n(B) Density graphs of the difference between the estimated and true EONR by error degree, yield response, and trial rates with different headings", fig.height = 8, fig.width = 6.5}
 profit_density_angle /
 rate_density_angle
 ```
 
-```{r profit-nocleaning-shift, echo=FALSE, fig.cap="Average profit differences by error degree, yield response, and misalignment type", fig.height=4}
+```{r profit-nocleaning-shift, echo=FALSE, fig.cap="(A) Density graphs of the profit differences produced by the estimated EONR by error degree, yield response, and trial rates with a parallel shift. \n(B) Density graphs of the difference between the estimated and true EONR by error degree, yield response, and trial rates with a parallel shift", fig.height = 8, fig.width = 6.5}
 profit_density_shift /
 rate_density_shift
 ```
+### Importance of EONR Overestimation 
 
+The profit losses indicate the estimated optimal input rates are differing from the true optimal rate, but an analysis of the difference between the estimated and true optimal input rate shows a consistent overestimation of the optimal nitrogen rate for most scenarios. Figure \@ref(fig:rate-nocleaning) presents the average results of the difference between the estimated EONR and true EONR by yield response, harvest alignment type, trial rates, and error level. Given the environmental cost to the over-application of nitrogen due to potential leaching and runoff, this is also an important result to consider in OFPE. For example, the high-curvature nitrogen response function results in the over-application of nitrogen for all harvest misalignment types at the highest error level, ranging from 8 to 40 pounds of nitrogen per acre over the optimal rate. Further, all of the misalignment types produced a significant overestimation of the optimal input rate under at least one trial scenario, 40, 25, and 45 pounds per acre for parallel shift, heading difference, and incompatible machinery respectively. The estimated optimal nitrogen rates would result in large excesses of nitrogen applied over whole fields. For some low and middle concavity functions, particularly those with uncentered trial rates, the estimated optimal input rate is below the true optimal rate. The greatest underestimation is about 12 pounds of nitrogen per acre with a 10-foot parallel shift and low trial rates; most underestimation are less than 5 pounds per acre. While not producing the environmental costs of over-application, the risk of under-applying could reduce producer profits under certain weather conditions.
+
+```{r rate-nocleaning, echo=FALSE, fig.cap="Average difference between the estimatated EONR and true EONR by error degree, yield response, and misalignment types, where (A) is parallel shift, (B) is a heading difference, and (C) is incompatible machinery", fig.width = 6.5, fig.height = 5}
+  rate_no_cleaning
+```
 
 ## Results from Simulation Study with Data Processing 
 
-Figure \@ref(fig:profit_clean_shift) to \@ref(fig:profit_clean_mismatch) are bar plots of the average profit change after processing the data by error level, yield response curve, and the $MaxDev$ parameter. As expected, as more data is removed from the estimation dataset, the benefits from the data processing fall. In many cases, the data processing could produce additional profit loss rather than gains. There are only a few trial scenarios where the lowest deviation parameter produces the highest profit gains. In fact, for most cases, the 20 pound deviation results in profit losses. To use the data cleaning on a variety of trial scenarios, the highest deviation of 40 pounds would be recommended. However, the appropriate parameter will depend on the misalignment type and the spacing of the trial rates.
+Figure \@ref(fig:profit_clean_shift) to \@ref(fig:profit_clean_mismatch) are bar plots of the average profit change after processing the data by error level, yield response curve, and the $MaxDev$ parameter. As expected, as more data is removed from the estimation dataset, the benefits from the data processing tend to fall. In many cases, the data processing could produce additional profit loss rather than gains. There are only a few trial scenarios where the lowest deviation parameter produces the highest profit gains. In fact, for most cases, the 20 pound deviation results in profit losses. To use the data cleaning on a variety of trial scenarios, the highest deviation of 40 pounds would be recommended. However, the appropriate parameter will depend on the misalignment type and the spacing of the trial rates.
 
-Figure \@ref(fig:profit_clean_shift) shows the profits from cleaning the parallel shift dataset. The largest profit increase from cleaning is 4 dollars an acre for the 30-foot shift with centered rates and high curvature. However, the same scenario but with a 10-foot shift results in a 10 dollar per acre loss when cleaned with the 20 pound deviation. The profit loss with the averaged data set is less 3 dollars per acre. While there are profit gains in cases where the original profit loss is large, there are profit losses for most of the scenarios when using the 20 or 30 pound deviation parameters.
+Figure \@ref(fig:profit_clean_shift) shows the profits from cleaning the parallel shift dataset. The largest profit increase from cleaning is \$4 an acre for the 30-foot shift with centered rates and high curvature. However, the same scenario but with a 10-foot shift results in a \$10 an acre loss when cleaned with the 20 pound deviation. The profit loss with the averaged data set is less than \$3 dollars an acre. While there are profit gains in cases where the original profit loss is large, there are profit losses for most of the scenarios when using the 20 or 30 pound deviation parameters.
 
-Figure \@ref(fig:profit_clean_angle) shows small impacts from the data processing on data with heading differences. The largest profit increase from cleaning is about 4 dollars an acre, and the largest decrease in profits is a little over 5 dollars an acre. Most of the cases are not affected by the data processing, with profit changes of less than 2 dollars an acre. With the deviation parameter of 40 pounds, the profit gains are as high as 4 dollars an acre and losses are all below a dollar.
+Figure \@ref(fig:profit_clean_angle) shows small impacts from the data processing on data with heading differences. The largest profit increase from cleaning is about \$4 an acre, and the largest decrease in profits is a little over \$5 an acre. Most of the cases are not affected by the data processing, with profit changes of less than \$2 an acre. With the deviation parameter of 40 pounds, the profit gains are as high as \$4 an acre and losses are all below a dollar.
 
-Figure \@ref(fig:profit_clean_mismatch) shows that the data processing is most effective with the incompatible machinery of 0.75 ratio. There are no profit losses over a dollar an acre, and the profit gains are as large as 9 dollars an acre for the case with high curvature. Due to the presence of unaveraged harvest data in this dataset, the processing method can consistently improve the estimation of the yield response function. In contrast, there is no unaveraged harvest data in the 1.25 ratio dataset. Thus, even after cleaning, there are data points lying under the true response curve. In fact, the data cleaning does not improve the estimation but produces further profit losses. In the averaged dataset, the profit losses are about 5 dollars per acre for the high response curve, and the data cleaning produces additional losses of up to 5 dollars per acre in 7 of the 9 trial scenario sets in figure 33. 
+Figure \@ref(fig:profit_clean_mismatch) shows that the data processing is most effective when there is incompatible machinery of a 0.75 ratio of harvester to applicator width. There are no profit losses over a dollar an acre, and the average profit gains are as large as \$9 an acre for the case with high curvature. Due to the presence of aligned harvest data in this dataset, the processing method can consistently improve the estimation of the yield response function. In contrast, there is no properly aligned harvest data in the 1.25 ratio dataset. Thus, even after cleaning, there are data points lying under the true response curve. In fact, the data cleaning does not improve the estimation but produces further profit losses. In the averaged dataset, the profit losses are about \$5 per acre for the high response curve, and the data cleaning produces additional losses of up to \$5 per acre in 7 of the 9 trial scenario sets in figure \@ref(fig:profit_clean_mismatch). 
 
-```{r profit-cleaning-shift, echo=FALSE, fig.cap="Average profit difference between cleaning data and not cleaning data from a parallel shift by yield response function, error degree, and maximum deviation"}
+```{r profit-cleaning-shift, echo=FALSE, fig.cap="Average profit difference between cleaning data and not cleaning data with a parallel shift by yield response function, error degree, and maximum deviation", fig.width = 6}
 profit_clean_shift
 ```
-```{r profit-cleaning-angle, echo=FALSE, fig.cap="Average profit difference between cleaning data and not cleaning data from a heading difference by yield response function, error degree, and maximum deviation"}
+
+```{r profit-cleaning-angle, echo=FALSE, fig.cap="Average profit difference between cleaning data and not cleaning data with a heading difference by yield response function, error degree, and maximum deviation", fig.width = 6}
 profit_clean_angle  
 ```
-```{r profit-cleaning-mismatch, echo=FALSE, fig.cap="Average profit difference between cleaning data and not cleaning data from incompatible machinery by yield response function, error degree, and maximum deviation"}
+
+```{r profit-cleaning-mismatch, echo=FALSE, fig.cap="Average profit difference between cleaning data and not cleaning data with incompatible machinery by yield response function, error degree, and maximum deviation", fig.width = 6}
 profit_clean_mismatch
 ```
-Figures \@ref(fig:rate_clean_shift) to \@ref(fig:rate_clean_mismatch) are bar charts of the difference between the estimated optimal input rate from the cleaned and averaged datasets. The profit losses from processing the data are often coming from an overcorrection of the input rate. For example, if the original data overestimated the optimal input rate, the data cleaning may underestimate the input rate. Due to the steeper slope of the response function at lower rates, the impact on profits of an underestimation of the same value as the previous overestimation will result in larger profit losses. 
 
-```{r rate-cleaning-shift, echo=FALSE, fig.cap="Average difference between the cleaned and raw estimated optimal rate by yield response function, misalignment type, error degree, and maximum deviation",}
+Figures \@ref(fig:rate_clean_shift) to \@ref(fig:rate_clean_mismatch) are bar charts of the difference between the estimated optimal input rate from the processed and unprocessed datasets. The profit losses from processing the data are often coming from an overcorrection of the input rate. For example, if the original data overestimated the optimal input rate, the data processing may underestimate the input rate. Due to the steeper slope of the response function at lower rates, the impact on profits of an underestimation of the same value as the previous overestimation will result in larger profit losses. Figures \@ref(fig:density-cleaning-mismatch-75) to \@ref(fig:rate-cleaning-mismatch-125) present the dentsity graphs of the profit losses and rate changes after cleaning data with incompatible machinery for both the 0.75 and 1.25 ratio. These density graphs further highlight the problems with data processing when there is not enough aligned data in the harvest. With a 1.25 harvester to applicator ratio, high trial rates, and a high curvature assumed yield response function, the data processing results in additional profit losses from \$10 to \$20 an acre. While the uncleaned data overestimated the EONR, the cleaned data underestimates the EONR by 25 to 30 pounds per acre. In contrast, with a harvest to applicator ratio of 0.75, the data processing corrects for the overestimation of the EONR, lowering the estimated EONR by 20 to 40 pounds as seen in figure \@ref(fig:rate-cleaning-mismatch-75). Density graphs for the other types of harvest misalignment are located in the Appendix \@ref(densityfigures). 
+
+```{r rate-cleaning-shift, echo=FALSE, fig.cap="Average difference between the cleaned and raw estimated optimal rate by yield response function, misalignment type, error degree, and maximum deviation", fig.width = 6}
 rate_clean_shift
 ```
-```{r rate-cleaning-angle, echo=FALSE, fig.cap="Average difference between the cleaned and raw estimated optimal rate by yield response function, misalignment type, error degree, and maximum deviation",}
+```{r rate-cleaning-angle, echo=FALSE, fig.cap="Average difference between the cleaned and raw estimated optimal rate by yield response function, misalignment type, error degree, and maximum deviation", fig.width = 6}
 rate_clean_angle 
 ```
-```{r rate-cleaning-mismatch, echo=FALSE, fig.cap="Average difference between the cleaned and raw estimated optimal rate by yield response function, misalignment type, error degree, and maximum deviation",}
+```{r rate-cleaning-mismatch, echo=FALSE, fig.cap="Average difference between the cleaned and raw estimated optimal rate by yield response function, misalignment type, error degree, and maximum deviation", fig.width = 6}
 rate_clean_mismatch
+```
+
+
+```{r density-cleaning-mismatch-75, echo=FALSE, fig.cap="Density graphs of the profit difference after cleaning the data by yield response, trial rates, and the maximum deivation parameter from incompatible machinery with 0.75 ratio of harvester to applicator width", fig.width = 6}
+profit_density_mismatch_clean_75
+```
+```{r rate-density-cleaning-mismatch-75, echo=FALSE, fig.cap="Density graphs of estimated EONR from cleaned data minus the estimated EONR from uncleaned data by yield response, trial rates, and the maximum deivation parameter from incompatible machinery with 0.75 ratio of harvester to applicator width", fig.width = 6}
+rate_density_mismatch_clean_75
+```
+
+```{r density-cleaning-mismatch-125, echo=FALSE, fig.cap="Density graphs of the profit difference after processing the data by yield response, trial rates, and the maximum deivation parameter from incompatible machinery with 1.25 ratio of harvester to applicator width", fig.width = 6}
+profit_density_mismatch_clean_125
+```
+```{r rate-density-cleaning-mismatch-125, echo=FALSE, fig.cap="Density graphs of estimated EONR from cleaned data minus the estimated EONR from uncleaned data by yield response, trial rates, and the maximum deivation parameter from incompatible machinery with 1.25 ratio of harvester to applicator width", fig.width = 6}
+rate_density_mismatch_clean_125
 ```
 # Real Field Example 
 
@@ -416,32 +453,43 @@ Field 3 is a nitrogen and seeding rate trial with eight nitrogen rates and seven
 
 The maximum deviation parameters for the dataset without misalignment are 2K and 10K seed for corn and soybean, respectively, and 20 pounds of nitrogen. The parameters are eliminated for the dataset with misalignment, allowing any amount of deviation in a yield polygon.
 
-Figure \@ref(fig:real-field-cleaning) presents the datasets with and without misalignment for the trial fields. Field 1 has around every other yield pass removed from the dataset due to misalignment. Field 2 has less of the field removed due to misalignment, with the corners of some plots removed due to the change in driving direction. Field 3 has the smallest percentage of the yield observations removed due to misalignment, with areas with large differences in the adjacent trial rate representing most of the yield data removed.
+Appendix \@ref(cleaningmaps) presents figures of the datasets with and without misalignment for the trial fields. Field 1 has around every other yield pass removed from the dataset due to misalignment. Field 2 has less of the field removed due to misalignment, with the corners of some plots removed due to the change in driving direction. Field 3 has the smallest percentage of the yield observations removed due to misalignment, with areas with large differences in the adjacent trial rate representing most of the yield data removed.
 
 ## Results
 
 Figures \@ref(fig:sresponse1) to \@ref(fig:nresponse3) present the yield response curves estimated from the datasets with and without the machine misalignment. The black points are the estimated optimal input rates, with the difference in the input rates printed in the lower right corner of the figure. Field 1 has a linear response to nitrogen rate in this trial year, resulting in corner solutions for the estimated optimal nitrogen rate. While the estimated nitrogen response functions have different slopes, the optimal nitrogen rates are the lowest rate. The yield response to seed for field 1 has some curvature; because of this curvature, the estimated response curve with misalignment lies under the estimated response curve without misalignment. This difference in the response curves results in a difference of one thousand seed per acre in the optimal seeding rate; however, there is minimal difference in profit due to the flatness of the overall response function.
-
-![(#fig:sresponse1) The estimated yield response functions to seeding rate on field 1 using data with and without misalignment](/Users/brittaniedge/Library/CloudStorage/Box-Box/Machine_Misalignment/Results/field1_response_seed.jpeg)
-![(#fig:nresponse1) The estimated yield response functions to nitrogen rate on field 1 using data with and without misalignment](/Users/brittaniedge/Library/CloudStorage/Box-Box/Machine_Misalignment/Results/field1_response_nitrogen.jpeg)
+```{r sresponse1,  fig.cap = "The estimated yield response functions to seeding rate on field 1 using data with and without misalignment", fig.height = 4, echo=FALSE}
+img <- readJPEG(here("Results/field1_response_seed.jpeg"))
+ grid.raster(img)
+```
+```{r nresponse1,  fig.cap = "The estimated yield response functions to nitrogen rate on field 1 using data with and without misalignment", fig.height = 4, echo=FALSE}
+img <- readJPEG(here("Results/field1_response_nitrogen.jpeg"))
+ grid.raster(img)
+```
 
 The results with and without misalignment for field 2 are presented in figure \@ref(fig:sresponse2); this is a soybean seeding trial with a wide range of seeding rates. As this is a seeding rate trial, the estimated yield response function shows a decrease in yield with additional seed per acre. Most of the estimated response curve with misalignment lies below the response curve without misalignment, and the optimal seeding rates differ by six thousand seed per acre. However, this difference in input rates does not correspond to a notable difference in profits. The optimal input rate occurs at a flat part of the response curve, and the estimated response functions do not have extreme differences in curvature.
+```{r sresponse2,  fig.cap = "The estimated yield response functions to seeding rate on field 2 using data with and without misalignment", fig.height = 4, echo=FALSE}
+img <- readJPEG(here("Results/field2_response_seed.jpeg"))
+ grid.raster(img)
+```
 
-![(#fig:sresponse2) The estimated yield response functions to seeding rate on field 2 using data with and without misalignment](/Users/brittaniedge/Library/CloudStorage/Box-Box/Machine_Misalignment/Results/field2_response_seed.jpeg)
-
-Figures \@ref(fig:sresponse3)  and \@ref(fig:nresponse3) present the results for field  3. Unlike fields 1 and 2, the misalignment for field 3 only occurs for one of the inputs, nitrogen. The planter and harvester are the same size, while the nitrogen applicator is wider than two passes of the harvester. Thus, while there is a difference of two thousand seeds per acre in the optimal seeding rates when we clean misalignment, this difference does not result in profit losses. The figure for the yield response to nitrogen shows that the slope of the yield response function changes significantly when including areas with misalignment, resulting in a difference of 23 pounds of nitrogen per acre recommended for this field. Additionally, because the slopes of the functions are different for this field, there is a loss in profit of $10 per acre when using the estimated optimal nitrogen rate from the data with misalignment rather than the rate from the cleaned dataset.
-
-![(#fig:sresponse3) The estimated yield response functions to seeding rate on field 3 using data with and without misalignment](/Users/brittaniedge/Library/CloudStorage/Box-Box/Machine_Misalignment/Results/field3_response_seed.jpeg)
-
-![(#fig:nresponse3) The estimated yield response functions to nitrogen rate on field 3 using data with and without misalignment](/Users/brittaniedge/Library/CloudStorage/Box-Box/Machine_Misalignment/Results/field3_response_nitrogen.jpeg)
+Figures \@ref(fig:sresponse3)  and \@ref(fig:nresponse3) present the results for field  3. Unlike fields 1 and 2, the misalignment for field 3 only occurs for one of the inputs, nitrogen. The planter and harvester are the same size, while the nitrogen applicator is wider than two passes of the harvester. Thus, while there is a difference of two thousand seeds per acre in the optimal seeding rates when we clean misalignment, this difference does not result in profit losses. The figure for the yield response to nitrogen shows that the slope of the yield response function changes significantly when including areas with misalignment, resulting in a difference of 23 pounds of nitrogen per acre recommended for this field. Additionally, because the slopes of the functions are different for this field, there is a loss in profit of \$10 per acre when using the estimated optimal nitrogen rate from the data with misalignment rather than the rate from the cleaned dataset.
+```{r sresponse3,  fig.cap = "The estimated yield response functions to seeding rate on field 3 using data with and without misalignment", fig.height = 4, echo=FALSE}
+img <- readJPEG(here("Results/field3_response_seed.jpeg"))
+ grid.raster(img)
+```
+```{r nresponse3,  fig.cap = "The estimated yield response functions to nitrogen rate on field 3 using data with and without misalignment", fig.height = 4, echo=FALSE}
+img <- readJPEG(here("Results/field3_response_nitrogen.jpeg"))
+ grid.raster(img)
+```
 
 # Conclusions
 
 Providing reliable estimations of optimal input rates is the main goal of producer-oriented research such as OFPE; thus, the impact of harvest misalignment is of concern for these trials. While these simulations nitrogen trials, yield response to seeding rates are also concave and often will have a point where additional seed may lower the yield. Thus, these conclusions should also be considered when designing seeding rate trials. 
 
-The work here indicates that the estimations of the optimal rates produced in the analysis of trial data are affected by harvest misalignment, particularly misalignment that comes from a parallel shift in the harvest operation. Parallel shifts can be minimized by working closely with farmers and operators to ensure the harvest will line-up with the application; however, human error cannot be completely avoided. Harvest misalignment from different operating headings and incompatible machinery widths are constraints that OFPE must consider when designing a trial. Fortunately, the profit-losses presented here are lower for these types of misalignment than the parallel shift. One of the factors impacting profit losses the most are the trial rates. However, the impact of trial rates cannot be determined before running a trial without knowledge of the true yield response function. Thus, future OFPE designs need to prevent harvest misalignment and enable the data processing to remove harvest observations with significant misalignment.
+The work here indicates that the estimations of the optimal rates produced in the analysis of trial data are affected by harvest misalignment, particularly misalignment that comes from a parallel shift in the harvest operation. Parallel shifts can be minimized by working closely with farmers and operators to ensure the harvest will line-up with the application; however, human error cannot be completely avoided. Harvest misalignment from different operating headings and incompatible machinery widths are constraints that OFPE must consider when designing a trial. Fortunately, the profit-losses presented here are lower for these types of misalignment than the parallel shift. It is important to note one of the factors impacting profit losses the most are the trial rates. However, the impact of trial rates cannot be determined before running a trial without knowledge of the true yield response function. Thus, future OFPE designs need to prevent harvest misalignment and enable the data processing to remove harvest observations with significant misalignment.
 
-For better results from data processing, trial plots should be wider than the harvester whenever possible. Even in a trial incompatible machinery widths, a reliable estimation of the optimal input rate is possible when the harvester is smaller than the trial plots. This can also be applied to the parallel shift; if a trial plot is twice the size of the harvester and the producer shifts over during the harvesting, there will still be unaveraged data in every other harvest pass. In those cases, the data processing method can be used to improve the optimal input estimation. However, if the harvester is the same size as the trial plots, any parallel shift results in data that is always collecting averaged yield, and the data processing may create new problems estimating the yield response function.  
+For better results from data processing, trial plots should be wider than the harvester whenever possible. Even in a trial with incompatible machinery widths, a reliable estimation of the optimal input rate is possible when the harvester is smaller than the trial plots. This can also be applied to the parallel shift; if a trial plot is twice the size of the harvester and the producer shifts over during the harvesting, there will still be unaveraged data in every other harvest pass. In those cases, the data processing method can be used to improve the optimal input estimation. However, if the harvester is the same size as the trial plots, any parallel shift results in data that is always collecting averaged yield, and the data processing may create new problems estimating the yield response function.  
 
 The potential benefits of a consistent data processing method extend beyond profit gains to producers and environmental benefits from lowering nitrogen applications. This would ease the burden of decision-making on researchers and automate the data cleaning in a way that is easier to reproduce or join different trial data together for research. This increases the quality of the research from OFPE trials, and the automation can save valuable time for principal researchers and crop consultants or producers wanting to run their own trials. As OFPE research groups grow, they are designing and analyzing more trials each year. For example, the DIFM group designed 75 trials for the 2021 year that will need to be analyzed and have results reported to farmers; at this scale, the time it takes an individual researcher to clean and process a trial needs to be minimized. An automated cleaning process that accounts for harvest misalignment in OFPE data is an important step for future research.
 Additionally, researchers understand transition zones exist for applicators and harvesters, the length of the transition zone is not stable across different trials. Due to the differences in machinery types and ages, the time it takes for a specific machine to stabilize inputs or harvest readings will vary significantly. In the earlier approaches to handling transitions zones, there is an assumed zone length applied to the whole field, and the beginning of a new trial plots is removed according to this length. A new method can use the trial data to identify transition zones without assigning a specific length. Yield polygons would not be grouped together if there is a large difference between the two input rates. This would help remove yield polygons in the transition areas where the input rate is changing to reach the new target rate. This approach allows the transition length to change with newer equipment or for smaller changes in the applied rate between two trial plots.
@@ -458,24 +506,61 @@ Headlands are the areas of the field where machinery turns after completing a pa
 
 The transition zones are the areas where the machine enters a new treatment plot. In these areas, the applicator is transitioning to a new target input rate, and the harvester is transitioning to reporting a new yield level. Because the machine may have a lag before applying the correct rates or reporting the accurate yield value the data in the transition zones are less reliable than further into a trial plot. Figure \@ref(fig:transitions) shows what these transition zones look like in as-planted data for a soybean trial. The overall application is accurate, with visible treatment plots, but there are areas where the planter has not adjusted to the new rate, particularly when moving between the highest and lowest planting rates.
 
-![(#fig:transitions) Examples of harvest and asapplied points](/Users/brittaniedge/Library/CloudStorage/Box-Box/HarvestMisalignment/Results/transitionzone.png)
+```{r transitions,  fig.cap = "Illustration of transition zones for the planter", fig.height = 4, echo=FALSE}
+img <- readPNG(here("Results/transitionzone.png"))
+ grid.raster(img)
+```
 
-## Point to Polygons{#polygon}
+## Point to Polygons{#polygons}
 
 Figure \@ref(fig:pointtopoly) shows what the point and polygon data look like for a set of harvest points with the blue box representing the harvester at the beginning of the passes. The polygons are constructed using the swath width of the machine or section reported in the data, the driving direction, and the distance between the points. If the driving direction or distance is not reported in the data, these can be calculated using the points. The swath width can be recovered based on knowledge of the machinery; however, missing information about the adjusted swath width when going over a previously visited part of the field will make the polygon recovery more challenging.
 
-![(#fig:pointtopoly) Harvest points and polygons](/Users/brittaniedge/Library/CloudStorage/Box-Box/HarvestMisalignment/Results/point-to-poly.png)
-## Spatial Error Generation
+```{r pointtopoly,  fig.cap = "Harvest points and polygons", fig.height = 4, echo=FALSE}
+img <- readPNG(here("Results/point-to-poly.png"))
+ grid.raster(img)
+```
+
+## Spatial Error Generation{#spatialerrors}
 Figure \@ref(fig:spatial-error) presents an example of the spatial errors for one field trial simulation. 
 ```{r spatial-error, echo=FALSE, fig.cap="Map of Simulated Spatial Errors", fig.height=4, message=FALSE, warning=FALSE}
-spatial_error_map
+readRDS(here("Results/spatialerrormap.rds"))   
 ``` 
 
-## Real Field Cleaning Maps
+## Real Field Cleaning Maps{#cleaningmaps}
 ```{r real-field-cleaning, echo=FALSE, fig.cap="Data for analysis with (left) and without (right) areas with misalignments for the three trial fields", fig.height=4, message=FALSE, warning=FALSE}
 readRDS(here("Results/real_field_cleaning.rds"))   
 ``` 
 
+## Density Graphs for All Trial Scenarios{#densityfigures}
 
+```{r profit-density-cleaning-shift-10, echo=FALSE, fig.cap="Density graphs of the profit difference after processing the data by yield response, trial rates, and the maximum deivation parameter for a 10-foot parallel shift", fig.width = 6}
+profit_density_shift_clean_10
+```
 
+```{r rate-density-cleaning-shift-10, echo=FALSE, fig.cap="Density graphs of estimated EONR from processed data minus the estimated EONR from unprocessed data by yield response, trial rates, and the maximum deivation parameter for a 10-foot parallel shift", fig.width = 6}
+rate_density_shift_clean_10
+```
 
+```{r profit-density-cleaning-shift-30, echo=FALSE, fig.cap="Density graphs of the profit difference after processing the data by yield response, trial rates, and the maximum deivation parameter for a 30-foot parallel shift", fig.width = 6}
+profit_density_shift_clean_30
+```
+
+```{r rate-density-cleaning-shift-30, echo=FALSE, fig.cap="Density graphs of estimated EONR from processed data minus the estimated EONR from unprocessed data by yield response, trial rates, and the maximum deivation parameter for a 30-foot parallel shift", fig.width = 6}
+rate_density_shift_clean_30
+```
+
+```{r profit-density-cleaning-angle-10, echo=FALSE, fig.cap="Density graphs of the profit difference after processing the data by yield response, trial rates, and the maximum deivation parameter for a 10-degree heading difference", fig.width = 6}
+profit_density_angle_clean_10
+```
+
+```{r rate-density-cleaning-angle-10, echo=FALSE, fig.cap="Density graphs of estimated EONR from processed data minus the estimated EONR from unprocessed data by yield response, trial rates, and the maximum deivation parameter for a 10-degree heading difference", fig.width = 6}
+rate_density_angle_clean_10
+```
+
+```{r profit-density-cleaning-angle-30, echo=FALSE, fig.cap="Density graphs of the profit difference after processing the data by yield response, trial rates, and the maximum deivation parameter for a 30-degree heading difference", fig.width = 6}
+profit_density_angle_clean_30
+```
+
+```{r rate-density-cleaning-angle-30, echo=FALSE, fig.cap="Density graphs of estimated EONR from processed data minus the estimated EONR from unprocessed data by yield response, trial rates, and the maximum deivation parameter for a 30-degree heading difference", fig.width = 6}
+rate_density_angle_clean_30
+```
